@@ -1,19 +1,22 @@
 class Report {
-  final String? publisherType;
+  final String publisherType;
   final int? hours;
   final int? bibleStudies;
-  final bool participated;
+  final bool? participated;
+  final DateTime reportingMonth;
+  final DateTime submittedAt;
 
   Report({
-    this.publisherType,
+    required this.publisherType,
     this.hours,
     this.bibleStudies,
-    required this.participated,
+    this.participated,
+    required this.reportingMonth,
+    required this.submittedAt,
   });
-
-  
 }
-void main(){
+
+/*void main() {
   final report = Report(
     publisherType: 'Publisher',
     participated: true,
@@ -22,3 +25,4 @@ void main(){
 
   final report2 = Report(publisherType: 'Publisher', participated: false);
 }
+*/

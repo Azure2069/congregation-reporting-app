@@ -1,7 +1,23 @@
+import 'package:congregation_reporting/models/reports.dart';
 import 'package:flutter/material.dart';
 
 class ReportDetailScreen extends StatelessWidget {
-  const ReportDetailScreen({super.key});
+  final Report report;
+  const ReportDetailScreen({super.key, required this.report});
+  static const months = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +55,7 @@ class ReportDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(width: 16),
                   Expanded(
+                    
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -52,7 +69,7 @@ class ReportDetailScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'January 2025',
+                          '${months[report.reportingMonth.month-1]} ${report.reportingMonth.year}', // Display the reporting month
                           style: Theme.of(context).textTheme.titleLarge
                               ?.copyWith(
                                 color: Colors.white,
@@ -112,10 +129,21 @@ class ReportDetailScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 18),
-                    _buildDetailRow('Service type', 'Baptized Publisher'),
-                    _buildDetailRow('Field service', 'Yes'),
-                    _buildDetailRow('Bible study', '2'),
+                    if(report.publisherType=='Publisher')...[_buildDetailRow('Service type', '${report.publisherType}'),
+                    _buildDetailRow('Participated', '${report.participated}'),
+                    _buildDetailRow('Bible study', '${report.bibleStudies}  study(ies)'),
+                    _buildDetailRow('Status', 'Submitted')]
+                      
+         else if(report.publisherType=="Regular Pioneer"|| report.publisherType=="Auxiliary Pioneer")...[
+          _buildDetailRow('Service type', '${report.publisherType}'),
+                    _buildDetailRow('Bible study', '${report.bibleStudies}  study(ies)'),
+                    _buildDetailRow('Hours', '${report.hours} hour(s)'),
                     _buildDetailRow('Status', 'Submitted'),
+           
+         ]
+                      
+                    
+                    
                   ],
                 ),
               ),

@@ -4,7 +4,7 @@ import '../../features/auth/screens/loginScreen.dart';
 import '../../features/auth/screens/publisherHomeScreen.dart';
 import '../../features/auth/screens/submitReportScreen.dart';
 import '../../features/auth/screens/reportHistoryScreen.dart';
-
+import '../../models/reports.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/login',
@@ -18,14 +18,17 @@ final appRouter = GoRouter(
 
     GoRoute(
       path: '/reportHistory',
-      builder: (context, state) => const ReportHistoryScreen(),
+      builder: (context, state) => ReportHistoryScreen(
+        report: state.extra as Report?,
+      ), // Pass the report data to ReportHistoryScreen
     ),
     GoRoute(
       path: '/submitReport',
       builder: (context, state) => const SubmitReportscreen(),
-    ), 
-    GoRoute(path: '/report-details', 
-    builder: (context, state)=>ReportDetailScreen(),
+    ),
+    GoRoute(
+      path: '/report-details',
+      builder: (context, state) =>ReportDetailScreen(report: state.extra as Report,),
     ),
   ],
 );

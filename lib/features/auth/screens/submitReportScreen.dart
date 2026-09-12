@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../models/reports.dart';
+import '../../../data/report_data.dart';
+
 
 class SubmitReportscreen extends StatefulWidget {
   const SubmitReportscreen({super.key});
+  
+  
 
   @override
   State<SubmitReportscreen> createState() => _SubmitReportscreen();
+  
 }
 
 class _SubmitReportscreen extends State<SubmitReportscreen> {
@@ -16,11 +21,14 @@ class _SubmitReportscreen extends State<SubmitReportscreen> {
   String? _publisherType;
   final _formKey = GlobalKey<FormState>();
 
+
+
   @override
   void initState() {
     super.initState();
     _bibleStudyTextController = TextEditingController();
     _hoursTextController = TextEditingController();
+    print("\n\n\n\n\Submit screen State created\n\n\n\n");
   }
 
   @override
@@ -196,43 +204,55 @@ class _SubmitReportscreen extends State<SubmitReportscreen> {
                     ElevatedButton(
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
-                          final Report report = Report(participated: false, publisherType: null, hours: null, bibleStudies: null);
 
-                          String? publisherType = _publisherType!;
-                          int? hours = int.tryParse(_hoursTextController.text);
-                          int? bibleStudies = int.tryParse(
+                          final String publisherType = _publisherType!;
+                          final int? hours = int.tryParse(
+                            _hoursTextController.text,
+                          );
+                          final int? bibleStudies = int.tryParse(
                             _bibleStudyTextController.text,
                           );
-                          bool participated = _participated;
+                          final bool participated = _participated;
+                          Report? report;
                           if (publisherType == "Publisher" && !participated) {
-                            final report = Report(
+                            report = Report(
                               participated: false,
                               bibleStudies: null,
                               hours: null,
                               publisherType: publisherType,
+                              submittedAt: DateTime.now(),
+                              reportingMonth: DateTime(2026, 9)
                             );
+                            reports.add(report);
                           } else if (publisherType == "Publisher" &&
                               participated) {
-                            final report = Report(
+                            report = Report(
                               participated: participated,
                               publisherType: publisherType,
                               hours: null,
                               bibleStudies: bibleStudies,
+                              submittedAt: DateTime.now(),
+                              reportingMonth: DateTime(2026, 9)
                             );
+                            reports.add(report);
                           } else if (publisherType == "Regular Pioneer" ||
                               publisherType == 'Auxiliary Pioneer') {
-                            final report = Report(
-                              participated: true,
+                            report = Report(
+                              participated: null,
                               publisherType: publisherType,
                               hours: hours,
                               bibleStudies: bibleStudies,
+                              submittedAt: DateTime.now(),
+                              reportingMonth: DateTime(2026, 9)
                             );
+                            reports.add(report);
                           }
-
+     
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text("Submitted")),
                           );
-                          context.go('/reportHistory');
+                          context.go('/reportHistory',
+                              ); // Navigate to ReportHistoryScreen
                         }
                       },
                       child: Text("Submit Report"),

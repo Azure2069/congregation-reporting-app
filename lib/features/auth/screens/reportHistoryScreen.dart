@@ -1,14 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../data/report_data.dart';
+import '../../../models/reports.dart';
 
 class ReportHistoryScreen extends StatefulWidget {
-  const ReportHistoryScreen({super.key});
+  final Report? report;
+  const ReportHistoryScreen({super.key, this.report});
 
   @override
   State<ReportHistoryScreen> createState() => _ReportHistoryScreen();
 }
 
 class _ReportHistoryScreen extends State<ReportHistoryScreen> {
+
+  static const months = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -30,52 +48,82 @@ class _ReportHistoryScreen extends State<ReportHistoryScreen> {
           ),
           const SizedBox(height: 22),
           Card(
-            child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 18,
-                vertical: 8,
-              ),
-              onTap: () {
-                context.push('/report-details');
+            child: ListView.builder(
+              itemCount: reports.length,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemBuilder: (context, index) {
+                final report = reports[index];
+                if (report.publisherType == "Publisher") {
+                  return ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 8,
+                    ),
+                    onTap: () {
+                      context.push('/report-details', extra: report);
+                    },
+                    leading: const CircleAvatar(
+                      backgroundColor: Color(0xFFD9EEE8),
+                      child: Icon(
+                        Icons.calendar_today,
+                        color: Color(0xFF176B62),
+                        size: 19,
+                      ),
+                    ),
+                    title: Text("${months[report.reportingMonth.month-1]} ${report.reportingMonth.year}"),
+                    subtitle: Padding(
+                      padding: EdgeInsets.only(top: 4),
+                      child: Text('Publisher Type: ${report.publisherType}\n'
+                        'Participated: ${report.participated}\n'
+                        'Bible Studies: ${report.bibleStudies}'
+                        '\nSubmission Time: ${report.submittedAt}',
+                      ),
+                    ),
+                    trailing: const Chip(label: Text("Submitted")),
+                  );
+                } else if (report.publisherType ==
+                        'Auxiliary Pioneer' ||
+                    report.publisherType == 'Regular Pioneer') {
+                  return Card(
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 8,
+                      ),
+                      onTap: () {
+                        context.push('/report-details', extra: report);
+                      },
+                      leading: const CircleAvatar(
+                        backgroundColor: Color(0xFFD9EEE8),
+                        child: Icon(
+                          Icons.calendar_month,
+                          color: Color(0xFF176B62),
+                          size: 19,
+                        ),
+                      ),
+                      title: Text("${months[report.reportingMonth.month-1]} ${report.reportingMonth.year}"),
+                      subtitle: Padding(
+                        padding: EdgeInsets.only(top: 4),
+                        child: Text('Publisher Type: ${report.publisherType}\n'
+                          "Hours: ${report.hours}\nBible Studies: ${report.bibleStudies}"
+                        '\nSubmission Time: ${report.submittedAt}'
+                        ),
+                      ),
+                      trailing: const Chip(label: Text("Submitted")),
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
               },
-              leading: const CircleAvatar(
-                backgroundColor: Color(0xFFD9EEE8),
-                child: Icon(
-                  Icons.calendar_today,
-                  color: Color(0xFF176B62),
-                  size: 19,
-                ),
-              ),
-              title: Text("January 2025"),
-              subtitle: Padding(
-                padding: EdgeInsets.only(top: 4),
-                child: Text('No Report Details'),
-              ),
-              trailing: const Chip(label: Text("Not submitted")),
             ),
           ),
           const SizedBox(height: 12),
-          Card(
-            child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 18,
-                vertical: 8,
-              ),
-              leading: const CircleAvatar(
-                backgroundColor: Color(0xFFD9EEE8),
-                child: Icon(
-                  Icons.calendar_month,
-                  color: Color(0xFF176B62),
-                  size: 19,
-                ),
-              ),
-              title: Text("December 2025"),
-              subtitle: Padding(
-                padding: EdgeInsets.only(top: 4),
-                child: Text("No Report Detail"),
-              ),
-              trailing: const Chip(label: Text("Not submitted")),
-            ),
+
+          ElevatedButton.icon(
+            onPressed: () => context.go('/home'),
+            icon: const Icon(Icons.home),
+            label: const Text('Back to Home'),
           ),
         ],
       ),
