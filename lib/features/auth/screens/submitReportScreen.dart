@@ -1,27 +1,22 @@
+import 'package:congregation_reporting/providers/report_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../models/reports.dart';
-import '../../../data/report_data.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-
-class SubmitReportscreen extends StatefulWidget {
+class SubmitReportscreen extends ConsumerStatefulWidget {
   const SubmitReportscreen({super.key});
-  
-  
 
   @override
-  State<SubmitReportscreen> createState() => _SubmitReportscreen();
-  
+  ConsumerState<SubmitReportscreen> createState() => _SubmitReportscreen();
 }
 
-class _SubmitReportscreen extends State<SubmitReportscreen> {
+class _SubmitReportscreen extends ConsumerState<SubmitReportscreen> {
   bool _participated = false;
   late final TextEditingController _bibleStudyTextController;
   late final TextEditingController _hoursTextController;
   String? _publisherType;
   final _formKey = GlobalKey<FormState>();
-
-
 
   @override
   void initState() {
@@ -204,7 +199,6 @@ class _SubmitReportscreen extends State<SubmitReportscreen> {
                     ElevatedButton(
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
-
                           final String publisherType = _publisherType!;
                           final int? hours = int.tryParse(
                             _hoursTextController.text,
@@ -213,17 +207,19 @@ class _SubmitReportscreen extends State<SubmitReportscreen> {
                             _bibleStudyTextController.text,
                           );
                           final bool participated = _participated;
-                          Report? report;
+                          Report report;
                           if (publisherType == "Publisher" && !participated) {
                             report = Report(
                               participated: false,
                               bibleStudies: null,
                               hours: null,
                               publisherType: publisherType,
+                              reportingMonth: DateTime(2026, 9),
                               submittedAt: DateTime.now(),
-                              reportingMonth: DateTime(2026, 9)
                             );
-                            reports.add(report);
+                            ref
+                                .read(reportProvider.notifier)
+                                .addReport(report);
                           } else if (publisherType == "Publisher" &&
                               participated) {
                             report = Report(
@@ -232,9 +228,12 @@ class _SubmitReportscreen extends State<SubmitReportscreen> {
                               hours: null,
                               bibleStudies: bibleStudies,
                               submittedAt: DateTime.now(),
-                              reportingMonth: DateTime(2026, 9)
+                              reportingMonth: DateTime(2026, 9),
                             );
-                            reports.add(report);
+
+                            ref
+                                .read(reportProvider.notifier)
+                                .addReport(report);
                           } else if (publisherType == "Regular Pioneer" ||
                               publisherType == 'Auxiliary Pioneer') {
                             report = Report(
@@ -243,16 +242,21 @@ class _SubmitReportscreen extends State<SubmitReportscreen> {
                               hours: hours,
                               bibleStudies: bibleStudies,
                               submittedAt: DateTime.now(),
-                              reportingMonth: DateTime(2026, 9)
+                              reportingMonth: DateTime(2026, 9),
                             );
-                            reports.add(report);
+                            
+                              ref
+                                  .read(reportProvider.notifier)
+                                  .addReport(report);
+        
                           }
-     
+
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text("Submitted")),
                           );
-                          context.go('/reportHistory',
-                              ); // Navigate to ReportHistoryScreen
+                          context.push(
+                            '/reportHistory',
+                          ); // Navigate to ReportHistoryScreen
                         }
                       },
                       child: Text("Submit Report"),

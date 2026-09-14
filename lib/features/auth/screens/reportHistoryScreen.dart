@@ -1,34 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../data/report_data.dart';
-import '../../../models/reports.dart';
+import '../../../providers/report_provider.dart';
 
-class ReportHistoryScreen extends StatefulWidget {
-  final Report? report;
-  const ReportHistoryScreen({super.key, this.report});
-
-  @override
-  State<ReportHistoryScreen> createState() => _ReportHistoryScreen();
-}
-
-class _ReportHistoryScreen extends State<ReportHistoryScreen> {
+class ReportHistoryScreen extends ConsumerWidget {
+  // final Report? report;
+  const ReportHistoryScreen({super.key});
 
   static const months = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-];
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final reports = ref.watch(reportProvider);
     return Scaffold(
       appBar: AppBar(title: const Text("Report History")),
       body: ListView(
@@ -71,19 +66,21 @@ class _ReportHistoryScreen extends State<ReportHistoryScreen> {
                         size: 19,
                       ),
                     ),
-                    title: Text("${months[report.reportingMonth.month-1]} ${report.reportingMonth.year}"),
+                    title: Text(
+                      "${months[report.reportingMonth.month - 1]} ${report.reportingMonth.year}",
+                    ),
                     subtitle: Padding(
                       padding: EdgeInsets.only(top: 4),
-                      child: Text('Publisher Type: ${report.publisherType}\n'
+                      child: Text(
+                        'Publisher Type: ${report.publisherType}\n'
                         'Participated: ${report.participated}\n'
                         'Bible Studies: ${report.bibleStudies}'
-                        '\nSubmission Time: ${report.submittedAt}',
+                        '\nSubmission Time: ${report.submittedAt.day}/${report.submittedAt.month}/${report.submittedAt.year} ${report.submittedAt.hour}:${report.submittedAt.minute}',
                       ),
                     ),
                     trailing: const Chip(label: Text("Submitted")),
                   );
-                } else if (report.publisherType ==
-                        'Auxiliary Pioneer' ||
+                } else if (report.publisherType == 'Auxiliary Pioneer' ||
                     report.publisherType == 'Regular Pioneer') {
                   return Card(
                     child: ListTile(
@@ -102,12 +99,15 @@ class _ReportHistoryScreen extends State<ReportHistoryScreen> {
                           size: 19,
                         ),
                       ),
-                      title: Text("${months[report.reportingMonth.month-1]} ${report.reportingMonth.year}"),
+                      title: Text(
+                        "${months[report.reportingMonth.month - 1]} ${report.reportingMonth.year}",
+                      ),
                       subtitle: Padding(
                         padding: EdgeInsets.only(top: 4),
-                        child: Text('Publisher Type: ${report.publisherType}\n'
+                        child: Text(
+                          'Publisher Type: ${report.publisherType}\n'
                           "Hours: ${report.hours}\nBible Studies: ${report.bibleStudies}"
-                        '\nSubmission Time: ${report.submittedAt}'
+                          '\nSubmission Time: ${report.submittedAt.day}/${report.submittedAt.month}/${report.submittedAt.year} ${report.submittedAt.hour}:${report.submittedAt.minute}',
                         ),
                       ),
                       trailing: const Chip(label: Text("Submitted")),

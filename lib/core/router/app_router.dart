@@ -19,7 +19,7 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/reportHistory',
       builder: (context, state) => ReportHistoryScreen(
-        report: state.extra as Report?,
+       
       ), // Pass the report data to ReportHistoryScreen
     ),
     GoRoute(

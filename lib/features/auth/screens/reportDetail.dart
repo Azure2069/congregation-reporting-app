@@ -130,15 +130,18 @@ class ReportDetailScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 18),
                     if(report.publisherType=='Publisher')...[_buildDetailRow('Service type', '${report.publisherType}'),
-                    _buildDetailRow('Participated', '${report.participated}'),
+                    _buildDetailRow('Participated', '${report.participated==true?'Yes':'No'}'),
                     _buildDetailRow('Bible study', '${report.bibleStudies}  study(ies)'),
-                    _buildDetailRow('Status', 'Submitted')]
+                    _buildDetailRow('Status', 'Submitted'),
+                    _buildDetailRow('Submission time', '${report.submittedAt.day}/${report.submittedAt.month}/${report.submittedAt.year} ${report.submittedAt.hour}:${report.submittedAt.minute}'),
+]
                       
          else if(report.publisherType=="Regular Pioneer"|| report.publisherType=="Auxiliary Pioneer")...[
           _buildDetailRow('Service type', '${report.publisherType}'),
                     _buildDetailRow('Bible study', '${report.bibleStudies}  study(ies)'),
                     _buildDetailRow('Hours', '${report.hours} hour(s)'),
                     _buildDetailRow('Status', 'Submitted'),
+                    _buildDetailRow('Submission time', '${report.submittedAt.day}/${report.submittedAt.month}/${report.submittedAt.year} ${report.submittedAt.hour}:${report.submittedAt.minute}'),
            
          ]
                       
