@@ -42,48 +42,88 @@ class ReportHistoryScreen extends ConsumerWidget {
             style: TextStyle(color: Color(0xFF647773)),
           ),
           const SizedBox(height: 22),
-          Card(
-            child: ListView.builder(
-              itemCount: reports.length,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemBuilder: (context, index) {
-                final report = reports[index];
-                if (report.publisherType == "Publisher") {
-                  return ListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 18,
-                      vertical: 8,
-                    ),
-                    onTap: () {
-                      context.push('/report-details', extra: report);
-                    },
-                    leading: const CircleAvatar(
-                      backgroundColor: Color(0xFFD9EEE8),
-                      child: Icon(
-                        Icons.calendar_today,
+          if (reports.isEmpty) ...[
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD9EEE8),
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: const Icon(
+                        Icons.folder_open_outlined,
                         color: Color(0xFF176B62),
-                        size: 19,
+                        size: 32,
                       ),
                     ),
-                    title: Text(
-                      "${months[report.reportingMonth.month - 1]} ${report.reportingMonth.year}",
-                    ),
-                    subtitle: Padding(
-                      padding: EdgeInsets.only(top: 4),
-                      child: Text(
-                        'Publisher Type: ${report.publisherType}\n'
-                        'Participated: ${report.participated}\n'
-                        'Bible Studies: ${report.bibleStudies}'
-                        '\nSubmission Time: ${report.submittedAt.day}/${report.submittedAt.month}/${report.submittedAt.year} ${report.submittedAt.hour}:${report.submittedAt.minute}',
+                    const SizedBox(height: 16),
+                    const Text(
+                      'No reports yet',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF173B38),
                       ),
                     ),
-                    trailing: const Chip(label: Text("Submitted")),
-                  );
-                } else if (report.publisherType == 'Auxiliary Pioneer' ||
-                    report.publisherType == 'Regular Pioneer') {
-                  return Card(
-                    child: ListTile(
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Your monthly submissions will appear here.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Color(0xFF647773), height: 1.4),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ] else ...[
+            Card(
+              child: ListView.builder(
+                itemCount: reports.length,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemBuilder: (context, index) {
+                  final report = reports[index];
+
+                  if (report.publisherType == "Publisher") {
+                    return ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 8,
+                      ),
+                      onTap: () {
+                        context.push('/report-details', extra: report);
+                      },
+                      leading: const CircleAvatar(
+                        backgroundColor: Color(0xFFD9EEE8),
+                        child: Icon(
+                          Icons.calendar_today,
+                          color: Color(0xFF176B62),
+                          size: 19,
+                        ),
+                      ),
+                      title: Text(
+                        "${months[report.reportingMonth.month - 1]} ${report.reportingMonth.year}",
+                      ),
+                      subtitle: Padding(
+                        padding: EdgeInsets.only(top: 4),
+                        child: Text(
+                          'Publisher Type: ${report.publisherType}\n'
+                          'Participated: ${report.participated}\n'
+                          'Bible Studies: ${report.bibleStudies}'
+                          '\nSubmission Time: ${report.submittedAt.day}/${report.submittedAt.month}/${report.submittedAt.year} ${report.submittedAt.hour}:${report.submittedAt.minute}',
+                        ),
+                      ),
+                      trailing: const Chip(label: Text("Submitted")),
+                    );
+                  } else if (report.publisherType == 'Auxiliary Pioneer' ||
+                      report.publisherType == 'Regular Pioneer') {
+                    return ListTile(
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 18,
                         vertical: 8,
@@ -111,13 +151,14 @@ class ReportHistoryScreen extends ConsumerWidget {
                         ),
                       ),
                       trailing: const Chip(label: Text("Submitted")),
-                    ),
-                  );
-                }
-                return const SizedBox.shrink();
-              },
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
             ),
-          ),
+          ],
+
           const SizedBox(height: 12),
 
           ElevatedButton.icon(

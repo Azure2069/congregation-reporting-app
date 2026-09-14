@@ -18,6 +18,21 @@ class _SubmitReportscreen extends ConsumerState<SubmitReportscreen> {
   String? _publisherType;
   final _formKey = GlobalKey<FormState>();
 
+  static const months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -207,7 +222,8 @@ class _SubmitReportscreen extends ConsumerState<SubmitReportscreen> {
                             _bibleStudyTextController.text,
                           );
                           final bool participated = _participated;
-                          Report report;
+                          Report? report;
+
                           if (publisherType == "Publisher" && !participated) {
                             report = Report(
                               participated: false,
@@ -217,9 +233,6 @@ class _SubmitReportscreen extends ConsumerState<SubmitReportscreen> {
                               reportingMonth: DateTime(2026, 9),
                               submittedAt: DateTime.now(),
                             );
-                            ref
-                                .read(reportProvider.notifier)
-                                .addReport(report);
                           } else if (publisherType == "Publisher" &&
                               participated) {
                             report = Report(
@@ -230,10 +243,6 @@ class _SubmitReportscreen extends ConsumerState<SubmitReportscreen> {
                               submittedAt: DateTime.now(),
                               reportingMonth: DateTime(2026, 9),
                             );
-
-                            ref
-                                .read(reportProvider.notifier)
-                                .addReport(report);
                           } else if (publisherType == "Regular Pioneer" ||
                               publisherType == 'Auxiliary Pioneer') {
                             report = Report(
@@ -244,19 +253,28 @@ class _SubmitReportscreen extends ConsumerState<SubmitReportscreen> {
                               submittedAt: DateTime.now(),
                               reportingMonth: DateTime(2026, 9),
                             );
-                            
-                              ref
-                                  .read(reportProvider.notifier)
-                                  .addReport(report);
-        
                           }
+                          final success = ref
+                              .read(reportProvider.notifier)
+                              .addReport(report!);
 
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Submitted")),
-                          );
-                          context.push(
-                            '/reportHistory',
-                          ); // Navigate to ReportHistoryScreen
+                          if (!success) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  "Report for ${months[report.reportingMonth.month-1]} ${report.reportingMonth.year} already submitted",
+                                ),
+                              ),
+                            );
+                  
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("Submitted")),
+                            );
+                            context.push(
+                              '/reportHistory',
+                            ); // Navigate to ReportHistoryScreen
+                          }
                         }
                       },
                       child: Text("Submit Report"),

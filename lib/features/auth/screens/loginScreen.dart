@@ -63,7 +63,7 @@ class _LoginScreen extends State<LoginScreen> {
                 decoration: const InputDecoration(
                   labelText: "Phone number",
                   hintText: "0xxxxxxxxx",
-                  prefixIcon: const Icon(Icons.phone_outlined),
+                  prefixIcon: Icon(Icons.phone_outlined),
                 ),
               ),
               SizedBox(height: 10),
