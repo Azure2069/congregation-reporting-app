@@ -32,21 +32,21 @@ class _LoginScreen extends State<LoginScreen> {
                 height: 74,
                 width: 74,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFD9EEE8),
-                  borderRadius: BorderRadius.circular(24),
+                  color: const Color(0xFFEAF5FB),
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: const Icon(
                   Icons.volunteer_activism_outlined,
                   size: 36,
-                  color: Color(0xFF176B62),
+                  color: Color(0xFF529FCB),
                 ),
               ),
               const SizedBox(height: 28),
               Text(
                 'Congregation reporting',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: const Color(0xFF173B38),
-                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF222121),
+                  fontWeight: FontWeight.w400,
                 ),
               ),
               const SizedBox(height: 8),
@@ -54,7 +54,7 @@ class _LoginScreen extends State<LoginScreen> {
                 'Sign in to manage your monthly ministry report.',
                 style: Theme.of(
                   context,
-                ).textTheme.bodyLarge?.copyWith(color: const Color(0xFF647773)),
+                ).textTheme.bodyLarge?.copyWith(color: const Color(0xFF555555)),
               ),
               const SizedBox(height: 36),
               TextField(
@@ -81,6 +81,14 @@ class _LoginScreen extends State<LoginScreen> {
                 onPressed: () => context.go('/home'),
                 icon: const Icon(Icons.arrow_forward_rounded),
                 label: const Text('Continue'),
+              ),
+               SizedBox(height: 10),
+
+              ElevatedButton(
+                onPressed: () {
+                  context.push('/overseerHome');
+                },
+                child: Text("Overseer Home"),
               ),
             ],
           ),

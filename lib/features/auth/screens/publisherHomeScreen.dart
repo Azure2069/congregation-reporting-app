@@ -24,14 +24,14 @@ class _PublisherHomeScreen extends State<PublisherHomeScreen> {
               'Good morning,',
               style: Theme.of(
                 context,
-              ).textTheme.titleMedium?.copyWith(color: const Color(0xFF647773)),
+              ).textTheme.titleMedium?.copyWith(color: const Color(0xFF555555)),
             ),
             const SizedBox(height: 4),
             Text(
               name,
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: const Color(0xFF173B38),
-                fontWeight: FontWeight.w800,
+                color: const Color(0xFF222121),
+                fontWeight: FontWeight.w400,
               ),
             ),
             const SizedBox(height: 24),
@@ -54,8 +54,8 @@ class _PublisherHomeScreen extends State<PublisherHomeScreen> {
                             vertical: 7,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFF1D6),
-                            borderRadius: BorderRadius.circular(30),
+                            color: const Color(0xFFEAF5FB),
+                            borderRadius: BorderRadius.circular(20),
                           ),
                           child: const Text(
                             'Not submitted',
@@ -73,14 +73,14 @@ class _PublisherHomeScreen extends State<PublisherHomeScreen> {
                       month,
                       style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(
-                            color: const Color(0xFF173B38),
+                            color: const Color(0xFF222121),
                             fontWeight: FontWeight.w800,
                           ),
                     ),
                     const SizedBox(height: 6),
                     const Text(
                       'Baptized Publisher',
-                      style: TextStyle(color: Color(0xFF647773)),
+                      style: TextStyle(color: Color(0xFF555555)),
                     ),
                     const SizedBox(height: 22),
                     ElevatedButton.icon(
@@ -104,13 +104,13 @@ class _PublisherHomeScreen extends State<PublisherHomeScreen> {
                         children: [
                           const Icon(
                             Icons.verified_user_outlined,
-                            color: Color(0xFF176B62),
+                            color: Color(0xFF529FCB),
                           ),
                           const SizedBox(height: 14),
                           const Text(
                             'Service status',
                             style: TextStyle(
-                              color: Color(0xFF647773),
+                              color: Color(0xFF555555),
                               fontSize: 12,
                             ),
                           ),
@@ -137,13 +137,13 @@ class _PublisherHomeScreen extends State<PublisherHomeScreen> {
                           children: [
                             Icon(
                               Icons.history_rounded,
-                              color: Color(0xFF176B62),
+                              color: Color(0xFF529FCB),
                             ),
                             const SizedBox(height: 14),
                             Text(
                               'Report history',
                               style: TextStyle(
-                                color: Color(0xFF647773),
+                                color: Color(0xFF555555),
                                 fontSize: 12,
                               ),
                             ),
@@ -164,14 +164,14 @@ class _PublisherHomeScreen extends State<PublisherHomeScreen> {
             Text(
               'Recent report',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: const Color(0xFF173B38),
+                color: const Color(0xFF222121),
                 fontWeight: FontWeight.w800,
               ),
             ),
             const SizedBox(height: 10),
             const Text(
               'Your submitted reports will appear here.',
-              style: TextStyle(color: Color(0xFF647773)),
+              style: TextStyle(color: Color(0xFF555555)),
             ),
           ],
         ),

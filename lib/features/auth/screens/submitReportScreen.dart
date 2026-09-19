@@ -2,10 +2,13 @@ import 'package:congregation_reporting/providers/report_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../models/reports.dart';
+import '../../../providers/user_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class SubmitReportscreen extends ConsumerStatefulWidget {
-  const SubmitReportscreen({super.key});
+  final Report? updateReport;
+
+  const SubmitReportscreen({super.key, this.updateReport});
 
   @override
   ConsumerState<SubmitReportscreen> createState() => _SubmitReportscreen();
@@ -16,6 +19,7 @@ class _SubmitReportscreen extends ConsumerState<SubmitReportscreen> {
   late final TextEditingController _bibleStudyTextController;
   late final TextEditingController _hoursTextController;
   String? _publisherType;
+  DateTime? _reportingMonth;
   final _formKey = GlobalKey<FormState>();
 
   static const months = [
@@ -38,7 +42,14 @@ class _SubmitReportscreen extends ConsumerState<SubmitReportscreen> {
     super.initState();
     _bibleStudyTextController = TextEditingController();
     _hoursTextController = TextEditingController();
-    print("\n\n\n\n\Submit screen State created\n\n\n\n");
+    if (widget.updateReport != null) {
+      _publisherType = widget.updateReport!.publisherType;
+      _reportingMonth = widget.updateReport!.reportingMonth;
+      _bibleStudyTextController.text =
+          widget.updateReport?.bibleStudies.toString() ?? '';
+      _hoursTextController.text = widget.updateReport?.hours.toString() ?? '';
+      _participated = widget.updateReport?.participated ?? false;
+    }
   }
 
   @override
@@ -50,8 +61,15 @@ class _SubmitReportscreen extends ConsumerState<SubmitReportscreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = ref.read(userProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text("Submit Report")),
+      appBar: AppBar(
+        title: Text(
+          widget.updateReport != null
+              ? 'Update Monthly Report'
+              : 'Submit Monthly Report',
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
         child: Padding(
@@ -68,25 +86,24 @@ class _SubmitReportscreen extends ConsumerState<SubmitReportscreen> {
                       "Submit monthly report",
                       style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(
-                            color: const Color(0xFF173B38),
-                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF222121),
+                            fontWeight: FontWeight.w400,
                           ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
-                      "January 2025",
-                      style: TextStyle(color: Color(0xFF647773)),
+                    Text(
+                      "${months[DateTime.now().month - 1]} ${DateTime.now().year.toString()}",
+                      style: const TextStyle(color: Color(0xFF555555)),
                     ),
-                    const SizedBox(height: 24),
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF0F5F0),
-                        borderRadius: BorderRadius.circular(16),
+                        color: const Color(0xFFEAF5FB),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Row(
                         children: [
-                          Icon(Icons.badge_outlined, color: Color(0xFF176B62)),
+                          Icon(Icons.badge_outlined, color: Color(0xFF529FCB)),
                           SizedBox(width: 12),
                           Text(
                             "Baptized Publisher",
@@ -226,54 +243,83 @@ class _SubmitReportscreen extends ConsumerState<SubmitReportscreen> {
 
                           if (publisherType == "Publisher" && !participated) {
                             report = Report(
+
+                              userId: "user123", // Replace with actual
                               participated: false,
                               bibleStudies: null,
                               hours: null,
                               publisherType: publisherType,
                               reportingMonth: DateTime(2026, 9),
                               submittedAt: DateTime.now(),
+                              status: ReportStatus.submitted,
+                              originalSubmissionTime: DateTime.now(),
                             );
                           } else if (publisherType == "Publisher" &&
                               participated) {
                             report = Report(
+                              userId: user[1].userId,
                               participated: participated,
                               publisherType: publisherType,
                               hours: null,
                               bibleStudies: bibleStudies,
                               submittedAt: DateTime.now(),
                               reportingMonth: DateTime(2026, 9),
+                              status: ReportStatus.submitted,
+                              originalSubmissionTime: DateTime.now(),
                             );
                           } else if (publisherType == "Regular Pioneer" ||
                               publisherType == 'Auxiliary Pioneer') {
                             report = Report(
+                              userId: user[1].userId,
                               participated: null,
                               publisherType: publisherType,
                               hours: hours,
                               bibleStudies: bibleStudies,
                               submittedAt: DateTime.now(),
                               reportingMonth: DateTime(2026, 9),
+                              status: ReportStatus.submitted,
+                              originalSubmissionTime: DateTime.now(),
                             );
                           }
-                          final success = ref
-                              .read(reportProvider.notifier)
-                              .addReport(report!);
-
-                          if (!success) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  "Report for ${months[report.reportingMonth.month-1]} ${report.reportingMonth.year} already submitted",
+                          if (widget.updateReport != null) {
+                            final updateSuccess = ref
+                                .read(reportProvider.notifier)
+                                .updateReport(widget.updateReport!, report!);
+                            if (!updateSuccess) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    "Cannot update report for ${months[report.reportingMonth.month - 1]} ${report.reportingMonth.year}. You can only update within 24 hours of submission.",
+                                  ),
                                 ),
-                              ),
-                            );
-                  
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("Report Updated")),
+                              );
+                              context.push('/reportHistory');
+                            }
                           } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("Submitted")),
-                            );
-                            context.push(
-                              '/reportHistory',
-                            ); // Navigate to ReportHistoryScreen
+                            final success = ref
+                                .read(reportProvider.notifier)
+                                .addReport(report!);
+
+                            if (!success) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    "Report for ${months[report.reportingMonth.month - 1]} ${report.reportingMonth.year} already submitted",
+                                  ),
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("Submitted")),
+                              );
+                              context.push(
+                                '/reportHistory',
+                              ); // Navigate to ReportHistoryScreen
+                            }
                           }
                         }
                       },

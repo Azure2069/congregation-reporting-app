@@ -16,17 +16,54 @@ class ReportApp extends StatelessWidget {
       routerConfig: appRouter,
       theme: ThemeData(
         useMaterial3: true,
-        scaffoldBackgroundColor: const Color(0xFFF6F7F2),
+        scaffoldBackgroundColor: Colors.white,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF176B62),
+          seedColor: const Color(0xFF529FCB),
           brightness: Brightness.light,
         ),
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFFF6F7F2),
-          foregroundColor: Color(0xFF173B38),
+          backgroundColor: Colors.white,
+          foregroundColor: Color(0xFF222121),
           centerTitle: false,
           elevation: 0,
           scrolledUnderElevation: 0,
+          titleTextStyle: TextStyle(
+            color: Color(0xFF222121),
+            fontSize: 22,
+            fontFamily: 'Georgia',
+          ),
+        ),
+        textTheme: const TextTheme(
+          displayLarge: TextStyle(
+            fontFamily: 'Georgia',
+            color: Color(0xFF222121),
+          ),
+          displayMedium: TextStyle(
+            fontFamily: 'Georgia',
+            color: Color(0xFF222121),
+          ),
+          headlineLarge: TextStyle(
+            fontFamily: 'Georgia',
+            color: Color(0xFF222121),
+          ),
+          headlineMedium: TextStyle(
+            fontFamily: 'Georgia',
+            color: Color(0xFF222121),
+          ),
+          headlineSmall: TextStyle(
+            fontFamily: 'Georgia',
+            color: Color(0xFF222121),
+          ),
+          bodyLarge: TextStyle(
+            fontSize: 17,
+            height: 1.5,
+            color: Color(0xFF222121),
+          ),
+          bodyMedium: TextStyle(
+            fontSize: 15,
+            height: 1.5,
+            color: Color(0xFF222121),
+          ),
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
@@ -36,35 +73,36 @@ class ReportApp extends StatelessWidget {
             vertical: 17,
           ),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(8),
             borderSide: BorderSide.none,
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFFE2E8E3)),
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Color(0xFFD5D5D5)),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFF176B62), width: 1.5),
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Color(0xFF211F54), width: 2),
           ),
         ),
         cardTheme: CardThemeData(
           color: Colors.white,
-          elevation: 0,
+          elevation: 2,
+          shadowColor: const Color(0x1420202B),
           margin: EdgeInsets.zero,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(22),
-            side: const BorderSide(color: Color(0xFFE2E8E3)),
+            borderRadius: BorderRadius.circular(20),
+            side: const BorderSide(color: Color(0xFFD5D5D5)),
           ),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF176B62),
+            backgroundColor: const Color(0xFF529FCB),
             foregroundColor: Colors.white,
             elevation: 0,
             minimumSize: const Size.fromHeight(52),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(20),
             ),
             textStyle: const TextStyle(fontWeight: FontWeight.w700),
           ),

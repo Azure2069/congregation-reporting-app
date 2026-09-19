@@ -1,32 +1,50 @@
 import 'package:congregation_reporting/models/reports.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
-class ReportDetailScreen extends StatelessWidget {
+import '../../../providers/report_provider.dart';
+
+class ReportDetailScreen extends ConsumerWidget {
   final Report report;
   const ReportDetailScreen({super.key, required this.report});
+
   static const months = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-];
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final canUpdate = ref.read(reportProvider.notifier).canResubmit(report);
+    String statusText(ReportStatus status) {
+      switch (status) {
+        case ReportStatus.submitted:
+          return "Submitted";
+        case ReportStatus.approved:
+          return "Approved";
+        case ReportStatus.returned:
+          return "Returned";
+      }
+    }
+
     return Scaffold(
       appBar: AppBar(title: const Text('Report detail')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 14, 20, 28),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+
           children: [
             Container(
               width: double.infinity,
@@ -34,7 +52,7 @@ class ReportDetailScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(24),
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF176B62), Color(0xFF1E8A80)],
+                  colors: [Color(0xFF529FCB), Color(0xFF211F54)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -55,7 +73,6 @@ class ReportDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -69,7 +86,7 @@ class ReportDetailScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '${months[report.reportingMonth.month-1]} ${report.reportingMonth.year}', // Display the reporting month
+                          '${months[report.reportingMonth.month - 1]} ${report.reportingMonth.year}', // Display the reporting month
                           style: Theme.of(context).textTheme.titleLarge
                               ?.copyWith(
                                 color: Colors.white,
@@ -104,14 +121,14 @@ class ReportDetailScreen extends StatelessWidget {
             Text(
               'Report details',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: const Color(0xFF173B38),
-                fontWeight: FontWeight.w800,
+                color: const Color(0xFF222121),
+                fontWeight: FontWeight.w400,
               ),
             ),
             const SizedBox(height: 6),
             const Text(
               'Details of your monthly submission.',
-              style: TextStyle(color: Color(0xFF647773)),
+              style: TextStyle(color: Color(0xFF555555)),
             ),
             const SizedBox(height: 22),
             Card(
@@ -125,28 +142,54 @@ class ReportDetailScreen extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF173B38),
+                        color: Color(0xFF222121),
                       ),
                     ),
+
                     const SizedBox(height: 18),
-                    if(report.publisherType=='Publisher')...[_buildDetailRow('Service type', '${report.publisherType}'),
-                    _buildDetailRow('Participated', '${report.participated==true?'Yes':'No'}'),
-                    _buildDetailRow('Bible study', '${report.bibleStudies}  study(ies)'),
-                    _buildDetailRow('Status', 'Submitted'),
-                    _buildDetailRow('Submission time', '${report.submittedAt.day}/${report.submittedAt.month}/${report.submittedAt.year} ${report.submittedAt.hour}:${report.submittedAt.minute}'),
-]
-                      
-         else if(report.publisherType=="Regular Pioneer"|| report.publisherType=="Auxiliary Pioneer")...[
-          _buildDetailRow('Service type', '${report.publisherType}'),
-                    _buildDetailRow('Bible study', '${report.bibleStudies}  study(ies)'),
-                    _buildDetailRow('Hours', '${report.hours} hour(s)'),
-                    _buildDetailRow('Status', 'Submitted'),
-                    _buildDetailRow('Submission time', '${report.submittedAt.day}/${report.submittedAt.month}/${report.submittedAt.year} ${report.submittedAt.hour}:${report.submittedAt.minute}'),
-           
-         ]
-                      
-                    
-                    
+                    if (report.publisherType == 'Publisher') ...[
+                      _buildDetailRow(
+                        'Service type',
+                        '${report.publisherType}',
+                      ),
+                      _buildDetailRow(
+                        'Participated',
+                        '${report.participated == true ? 'Yes' : 'No'}',
+                      ),
+                      _buildDetailRow(
+                        'Bible study',
+                        '${report.bibleStudies}  study(ies)',
+                      ),
+                      _buildDetailRow('Status', '${statusText(report.status)}'),
+                      _buildDetailRow(
+                        'Submission time',
+                        '${report.submittedAt.day}/${report.submittedAt.month}/${report.submittedAt.year} ${report.submittedAt.hour}:${report.submittedAt.minute}',
+                      ),
+                    ] else if (report.publisherType == "Regular Pioneer" ||
+                        report.publisherType == "Auxiliary Pioneer") ...[
+                      _buildDetailRow(
+                        'Service type',
+                        '${report.publisherType}',
+                      ),
+                      _buildDetailRow(
+                        'Bible study',
+                        '${report.bibleStudies}  study(ies)',
+                      ),
+                      _buildDetailRow('Hours', '${report.hours} hour(s)'),
+                      _buildDetailRow('Status', '${statusText(report.status)}'),
+                      _buildDetailRow(
+                        'Submission time',
+                        '${report.submittedAt.day}/${report.submittedAt.month}/${report.submittedAt.year} ${report.submittedAt.hour}:${report.submittedAt.minute}',
+                      ),
+                    ],
+                    if (canUpdate) ...[
+                      ElevatedButton(
+                        onPressed: () {
+                          context.push("/updateReport", extra: report);
+                        },
+                        child: const Text('Update Report'),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -168,7 +211,7 @@ class ReportDetailScreen extends StatelessWidget {
             child: Text(
               label,
               style: const TextStyle(
-                color: Color(0xFF647773),
+                color: Color(0xFF555555),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -177,7 +220,7 @@ class ReportDetailScreen extends StatelessWidget {
             child: Text(
               value,
               style: const TextStyle(
-                color: Color(0xFF173B38),
+                color: Color(0xFF222121),
                 fontWeight: FontWeight.w700,
               ),
             ),
