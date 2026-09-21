@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../providers/report_provider.dart';
 import '../../../models/reports.dart';
+import '../../../core/utils/date_labels.dart';
 
 class ReportHistoryScreen extends ConsumerWidget {
   // final Report? report;
@@ -101,8 +102,7 @@ class ReportHistoryScreen extends ConsumerWidget {
 
   Widget _buildReportCard(BuildContext context, Report report) {
     final isPublisher = report.publisherType == 'Publisher';
-    final month =
-        '${months[report.reportingMonth.month - 1]} ${report.reportingMonth.year}';
+    final month = DateLabels.monthYear(report.reportingMonth);
     final status =
         report.status.name[0].toUpperCase() + report.status.name.substring(1);
 
@@ -174,7 +174,7 @@ class ReportHistoryScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 14),
               Text(
-                'Submitted ${report.submittedAt.day}/${report.submittedAt.month}/${report.submittedAt.year}',
+                'Submitted ${DateLabels.shortDate(report.submittedAt)}',
                 style: const TextStyle(fontSize: 12, color: Color(0xFF777777)),
               ),
             ],

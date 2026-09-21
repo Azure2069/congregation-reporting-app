@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/utils/date_labels.dart';
 
 class PublisherHomeScreen extends StatefulWidget {
   const PublisherHomeScreen({super.key});
@@ -10,9 +11,9 @@ class PublisherHomeScreen extends StatefulWidget {
 
 class _PublisherHomeScreen extends State<PublisherHomeScreen> {
   final name = 'Isaac';
-  final month = 'January 2025';
   @override
   Widget build(BuildContext context) {
+    final reportingMonth = DateLabels.currentReportingMonth();
     return Scaffold(
       appBar: AppBar(title: const Text('Congregation Report')),
       body: SingleChildScrollView(
@@ -21,15 +22,15 @@ class _PublisherHomeScreen extends State<PublisherHomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Good morning,',
+              'MONTHLY MINISTRY',
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(color: const Color(0xFF555555)),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 8),
             Text(
-              name,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+              'Hello, $name',
+              style: Theme.of(context).textTheme.displaySmall?.copyWith(
                 color: const Color(0xFF222121),
                 fontWeight: FontWeight.w400,
               ),
@@ -70,7 +71,7 @@ class _PublisherHomeScreen extends State<PublisherHomeScreen> {
                     ),
                     const SizedBox(height: 22),
                     Text(
-                      month,
+                      DateLabels.monthYear(reportingMonth),
                       style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(
                             color: const Color(0xFF222121),

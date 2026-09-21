@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/router/app_router.dart';
+import 'core/router/app_router.dart';
 
 void main() {
   runApp(ProviderScope(child: ReportApp()));
@@ -21,6 +21,7 @@ class ReportApp extends StatelessWidget {
           seedColor: const Color(0xFF529FCB),
           brightness: Brightness.light,
         ),
+        dividerColor: const Color(0xFFD5D5D5),
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.white,
           foregroundColor: Color(0xFF222121),
@@ -31,12 +32,15 @@ class ReportApp extends StatelessWidget {
             color: Color(0xFF222121),
             fontSize: 22,
             fontFamily: 'Georgia',
+            fontWeight: FontWeight.w400,
           ),
         ),
         textTheme: const TextTheme(
           displayLarge: TextStyle(
             fontFamily: 'Georgia',
             color: Color(0xFF222121),
+            fontSize: 56,
+            height: 0.96,
           ),
           displayMedium: TextStyle(
             fontFamily: 'Georgia',
@@ -49,13 +53,17 @@ class ReportApp extends StatelessWidget {
           headlineMedium: TextStyle(
             fontFamily: 'Georgia',
             color: Color(0xFF222121),
+            fontSize: 36,
+            height: 1.15,
           ),
           headlineSmall: TextStyle(
             fontFamily: 'Georgia',
             color: Color(0xFF222121),
+            fontSize: 28,
+            height: 1.2,
           ),
           bodyLarge: TextStyle(
-            fontSize: 17,
+            fontSize: 18,
             height: 1.5,
             color: Color(0xFF222121),
           ),
@@ -104,7 +112,20 @@ class ReportApp extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
-            textStyle: const TextStyle(fontWeight: FontWeight.w700),
+            textStyle: const TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 16,
+            ),
+          ),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: const Color(0xFF211F54),
+            minimumSize: const Size.fromHeight(52),
+            side: const BorderSide(color: Color(0xFF211F54)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
           ),
         ),
       ),

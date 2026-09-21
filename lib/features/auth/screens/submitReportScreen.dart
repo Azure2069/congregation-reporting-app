@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../models/reports.dart';
 import '../../../providers/user_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/utils/date_labels.dart';
 
 class SubmitReportscreen extends ConsumerStatefulWidget {
   final Report? updateReport;
@@ -62,6 +63,8 @@ class _SubmitReportscreen extends ConsumerState<SubmitReportscreen> {
   @override
   Widget build(BuildContext context) {
     final user = ref.read(userProvider);
+    final reportingMonth =
+        _reportingMonth ?? DateLabels.currentReportingMonth();
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -92,7 +95,7 @@ class _SubmitReportscreen extends ConsumerState<SubmitReportscreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      "${months[DateTime.now().month - 1]} ${DateTime.now().year.toString()}",
+                      DateLabels.monthYear(reportingMonth),
                       style: const TextStyle(color: Color(0xFF555555)),
                     ),
                     Container(
@@ -243,13 +246,12 @@ class _SubmitReportscreen extends ConsumerState<SubmitReportscreen> {
 
                           if (publisherType == "Publisher" && !participated) {
                             report = Report(
-
                               userId: "user123", // Replace with actual
                               participated: false,
                               bibleStudies: null,
                               hours: null,
                               publisherType: publisherType,
-                              reportingMonth: DateTime(2026, 9),
+                              reportingMonth: reportingMonth,
                               submittedAt: DateTime.now(),
                               status: ReportStatus.submitted,
                               originalSubmissionTime: DateTime.now(),
@@ -263,7 +265,7 @@ class _SubmitReportscreen extends ConsumerState<SubmitReportscreen> {
                               hours: null,
                               bibleStudies: bibleStudies,
                               submittedAt: DateTime.now(),
-                              reportingMonth: DateTime(2026, 9),
+                              reportingMonth: reportingMonth,
                               status: ReportStatus.submitted,
                               originalSubmissionTime: DateTime.now(),
                             );
@@ -276,7 +278,7 @@ class _SubmitReportscreen extends ConsumerState<SubmitReportscreen> {
                               hours: hours,
                               bibleStudies: bibleStudies,
                               submittedAt: DateTime.now(),
-                              reportingMonth: DateTime(2026, 9),
+                              reportingMonth: reportingMonth,
                               status: ReportStatus.submitted,
                               originalSubmissionTime: DateTime.now(),
                             );

@@ -4,25 +4,117 @@ import '../models/reports.dart';
 class ReportNotifier extends Notifier<List<Report>> {
   @override
   List<Report> build() {
-    return [];
+    return [
+      Report(
+        userId: "1", // Isaac
+        publisherType: "Publisher",
+        participated: true,
+        bibleStudies: 3,
+        hours: null,
+        reportingMonth: DateTime(2026, 9),
+        submittedAt: DateTime(2026, 9, 5),
+        originalSubmissionTime: DateTime(2026, 9, 5),
+        status: ReportStatus.submitted,
+      ),
+
+      Report(
+        userId: "1", // Isaac
+        publisherType: "Publisher",
+        participated: true,
+        bibleStudies: 4,
+        hours: null,
+        reportingMonth: DateTime(2026, 8),
+        submittedAt: DateTime(2026, 8, 4),
+        originalSubmissionTime: DateTime(2026, 8, 4),
+        status: ReportStatus.approved,
+      ),
+
+      Report(
+        userId: "2", // Collins
+        publisherType: "Publisher",
+        participated: true,
+        bibleStudies: 2,
+        hours: null,
+        reportingMonth: DateTime(2026, 9),
+        submittedAt: DateTime(2026, 9, 6),
+        originalSubmissionTime: DateTime(2026, 9, 6),
+        status: ReportStatus.approved,
+      ),
+
+      Report(
+        userId: "3", // Henrietta
+        publisherType: "Publisher",
+        participated: false,
+        bibleStudies: null,
+        hours: null,
+        reportingMonth: DateTime(2026, 9),
+        submittedAt: DateTime(2026, 9, 7),
+        originalSubmissionTime: DateTime(2026, 9, 7),
+        status: ReportStatus.approved,
+      ),
+
+      Report(
+        userId: "4", // Naomi - Regular Pioneer
+        publisherType: "Regular Pioneer",
+        participated: null,
+        bibleStudies: 6,
+        hours: 50,
+        reportingMonth: DateTime(2026, 9),
+        submittedAt: DateTime(2026, 9, 5),
+        originalSubmissionTime: DateTime(2026, 9, 5),
+        status: ReportStatus.submitted,
+      ),
+
+      Report(
+        userId: "4", // Naomi
+        publisherType: "Regular Pioneer",
+        participated: null,
+        bibleStudies: 5,
+        hours: 48,
+        reportingMonth: DateTime(2026, 8),
+        submittedAt: DateTime(2026, 8, 6),
+        originalSubmissionTime: DateTime(2026, 8, 6),
+        status: ReportStatus.approved,
+      ),
+
+      Report(
+        userId: "5", // Enoch
+        publisherType: "Publisher",
+        participated: true,
+        bibleStudies: 2,
+        hours: null,
+        reportingMonth: DateTime(2026, 9),
+        submittedAt: DateTime(2026, 9, 4),
+        originalSubmissionTime: DateTime(2026, 9, 4),
+        status: ReportStatus.approved,
+      ),
+    ];
   }
 
   bool isDuplicate(Report report) {
     return state.any(
       (existingReport) =>
           existingReport.reportingMonth.month == report.reportingMonth.month &&
-          existingReport.reportingMonth.year == report.reportingMonth.year
-          && existingReport.userId == report.userId,
+          existingReport.reportingMonth.year == report.reportingMonth.year &&
+          existingReport.userId == report.userId,
     );
   }
 
   bool canResubmit(Report old) {
-   
-      final difference = DateTime.now().difference(old.originalSubmissionTime);
-    if(difference<= const Duration(hours: 24) && old.status==ReportStatus.submitted){
+    final difference = DateTime.now().difference(old.originalSubmissionTime);
+    if (difference >= Duration.zero &&
+        difference <= const Duration(hours: 24) &&
+        old.status == ReportStatus.submitted) {
       return true;
     }
     return false;
+  }
+
+  List<Report> getCurrentReports(DateTime date) {
+    return state.where((existingReport) {
+      return (existingReport.reportingMonth.month == date.month &&
+          existingReport.reportingMonth.year == date.year);
+    }).toList();
   }
 
   bool updateReport(Report old, Report newReport) {
@@ -85,16 +177,13 @@ class ReportNotifier extends Notifier<List<Report>> {
     state = [];
   }
 
-List<Report> getReportsForUser(String userId) {
-   return state.where((existingReport) {
-    return  existingReport.userId == userId;
+  List<Report> getReportsForUser(String userId) {
+    return state.where((existingReport) {
+      return existingReport.userId == userId;
     }).toList();
   }
-
 }
 
 final reportProvider = NotifierProvider<ReportNotifier, List<Report>>(
   ReportNotifier.new,
 );
-
-

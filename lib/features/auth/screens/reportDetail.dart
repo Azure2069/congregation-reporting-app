@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../providers/report_provider.dart';
+import '../../../core/utils/date_labels.dart';
 
 class ReportDetailScreen extends ConsumerWidget {
   final Report report;
@@ -86,7 +87,7 @@ class ReportDetailScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '${months[report.reportingMonth.month - 1]} ${report.reportingMonth.year}', // Display the reporting month
+                          DateLabels.monthYear(report.reportingMonth),
                           style: Theme.of(context).textTheme.titleLarge
                               ?.copyWith(
                                 color: Colors.white,
@@ -163,7 +164,7 @@ class ReportDetailScreen extends ConsumerWidget {
                       _buildDetailRow('Status', '${statusText(report.status)}'),
                       _buildDetailRow(
                         'Submission time',
-                        '${report.submittedAt.day}/${report.submittedAt.month}/${report.submittedAt.year} ${report.submittedAt.hour}:${report.submittedAt.minute}',
+                        DateLabels.dateTime(report.submittedAt),
                       ),
                     ] else if (report.publisherType == "Regular Pioneer" ||
                         report.publisherType == "Auxiliary Pioneer") ...[
@@ -179,7 +180,7 @@ class ReportDetailScreen extends ConsumerWidget {
                       _buildDetailRow('Status', '${statusText(report.status)}'),
                       _buildDetailRow(
                         'Submission time',
-                        '${report.submittedAt.day}/${report.submittedAt.month}/${report.submittedAt.year} ${report.submittedAt.hour}:${report.submittedAt.minute}',
+                        DateLabels.dateTime(report.submittedAt),
                       ),
                     ],
                     if (canUpdate) ...[

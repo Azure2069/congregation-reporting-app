@@ -1,4 +1,6 @@
 import 'package:congregation_reporting/features/auth/screens/reportDetail.dart';
+import 'package:congregation_reporting/features/overseer/screens/all_reports.dart';
+import 'package:congregation_reporting/features/overseer/screens/current_month_reports.dart';
 import 'package:congregation_reporting/features/overseer/screens/group_members_screen.dart';
 import 'package:congregation_reporting/models/user.dart';
 import 'package:go_router/go_router.dart';
@@ -43,7 +45,15 @@ final appRouter = GoRouter(
     ),
         GoRoute(path: '/memberReport', builder:(context, state)=>MemberReportsScreen(
           member: state.extra as User
-        ))
+        ),
+        ),
+    GoRoute(path: '/currentReports', builder:(context, state)=>CurrentMonthReports()
+    ),
+    GoRoute(path: "/allReports",
+    builder: (context, state)=>AllReports()
+    
+    )
+    
 
   ],
 );
