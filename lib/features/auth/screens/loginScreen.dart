@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/api/api_client.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/token_provider.dart';
+import '../../../core/api/users/users_api.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
   @override
-  State<LoginScreen> createState() => _LoginScreen();
+  ConsumerState<LoginScreen> createState() => _LoginScreen();
 }
 
-class _LoginScreen extends State<LoginScreen> {
-  final phoneController = TextEditingController();
-  final dateController = TextEditingController();
+class _LoginScreen extends ConsumerState<LoginScreen> {
+  final usernameController = TextEditingController();
+  final passwordController = TextEditingController();
 
   @override
   void dispose() {
-    phoneController.dispose();
-    dateController.dispose();
+    usernameController.dispose();
+    passwordController.dispose();
     super.dispose();
   }
 
@@ -58,31 +62,43 @@ class _LoginScreen extends State<LoginScreen> {
               ),
               const SizedBox(height: 36),
               TextField(
-                controller: phoneController,
-                keyboardType: TextInputType.phone,
+                controller: usernameController,
                 decoration: const InputDecoration(
-                  labelText: "Phone number",
-                  hintText: "0xxxxxxxxx",
-                  prefixIcon: Icon(Icons.phone_outlined),
+                  labelText: "Username",
+                  hintText: "Enter your username",
+                  prefixIcon: Icon(Icons.person_outlined),
                 ),
               ),
               SizedBox(height: 10),
               TextField(
-                controller: dateController,
+                controller: passwordController,
+                obscureText: true,
                 decoration: InputDecoration(
-                  labelText: "Baptism year",
-                  hintText: "YYYY",
-                  prefixIcon: const Icon(Icons.calendar_today_outlined),
+                  labelText: "Password",
+                  hintText: "Enter your password",
+                  prefixIcon: const Icon(Icons.lock_outlined),
                 ),
               ),
 
               SizedBox(height: 10),
               ElevatedButton.icon(
-                onPressed: () => context.go('/home'),
+                onPressed: () async {
+                  final response = await ref.read(usersApiProvider).login(
+                    usernameController.text,
+                    passwordController.text
+                  );
+                  final token = response.data['session_token'];
+                  ref.read(authTokenProvider.notifier).state = token;
+                  if (token != null) {
+                    context.go('/home');
+                  }
+                },
+
+                // => context.go('/home'),
                 icon: const Icon(Icons.arrow_forward_rounded),
                 label: const Text('Continue'),
               ),
-               SizedBox(height: 10),
+              SizedBox(height: 10),
 
               ElevatedButton(
                 onPressed: () {

@@ -1,18 +1,24 @@
+import 'package:dio/dio.dart';
+
+import '../../../core/api/api_client.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/utils/date_labels.dart';
+import '../providers/token_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/api/users/users_api.dart';
 
-class PublisherHomeScreen extends StatefulWidget {
+class PublisherHomeScreen extends ConsumerStatefulWidget {
   const PublisherHomeScreen({super.key});
 
   @override
-  State<PublisherHomeScreen> createState() => _PublisherHomeScreen();
+  ConsumerState<PublisherHomeScreen> createState() => _PublisherHomeScreen();
 }
 
-class _PublisherHomeScreen extends State<PublisherHomeScreen> {
-  final name = 'Isaac';
+class _PublisherHomeScreen extends ConsumerState<PublisherHomeScreen> {
   @override
   Widget build(BuildContext context) {
+    final currentUser = ref.watch(currentUserProvider);
     final reportingMonth = DateLabels.currentReportingMonth();
     return Scaffold(
       appBar: AppBar(title: const Text('Congregation Report')),
@@ -21,20 +27,33 @@ class _PublisherHomeScreen extends State<PublisherHomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            currentUser.when(
+              loading: () => const CircularProgressIndicator(),
+              error: ((error, stackTrace) {
+                if (error is DioException &&
+                    error.response?.statusCode == 401) {
+                  ref.read(authTokenProvider.notifier).state = null;
+                }
+                if (ref.read(authTokenProvider.notifier).state == null) {
+                  context.pop();
+                }
+                return const Text('Failed to load your profile.');
+              }),
+              data: (response) {
+                final user = response.data;
+                return Text(
+                  'Welcome, ${user['name']}!',
+                  style: const TextStyle(fontSize: 24),
+                );
+              },
+            ),
             Text(
               'MONTHLY MINISTRY',
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(color: const Color(0xFF555555)),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Hello, $name',
-              style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                color: const Color(0xFF222121),
-                fontWeight: FontWeight.w400,
-              ),
-            ),
+
             const SizedBox(height: 24),
             Card(
               child: Padding(
