@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../core/utils/date_labels.dart';
 
 class CurrentMonthReports extends ConsumerWidget {
-  CurrentMonthReports({super.key});
+  const CurrentMonthReports({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentMonth = DateLabels.currentReportingMonth();

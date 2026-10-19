@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/api/api_client.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/token_provider.dart';
 import '../../../core/api/users/users_api.dart';
@@ -14,6 +13,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreen extends ConsumerState<LoginScreen> {
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
+  bool isLoading = false;
 
   @override
   void dispose() {
@@ -82,29 +82,66 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
 
               SizedBox(height: 10),
               ElevatedButton.icon(
-                onPressed: () async {
-                  final response = await ref.read(usersApiProvider).login(
-                    usernameController.text,
-                    passwordController.text
+              onPressed: isLoading ? null : () async {
+                if (usernameController.text.trim().isEmpty ||
+                    passwordController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Enter your username and password.'),
+                    ),
                   );
-                  final token = response.data['session_token'];
+                  return;
+                }
+
+                setState(() => isLoading = true);
+
+                try {
+                  final response = await ref.read(usersApiProvider).login(
+                    usernameController.text.trim(),
+                    passwordController.text,
+                  );
+
+                  final token = response['session_token'];
+
+                  if (token == null || token is! String || token.isEmpty) {
+                    throw Exception('The server did not return a valid session token.');
+                  }
+
                   ref.read(authTokenProvider.notifier).state = token;
-                  if (token != null) {
+
+                  if (mounted) {
                     context.go('/home');
                   }
-                },
-
-                // => context.go('/home'),
-                icon: const Icon(Icons.arrow_forward_rounded),
-                label: const Text('Continue'),
-              ),
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Login failed. Check your credentials and try again.'),
+                      ),
+                    );
+                  }
+                } finally {
+                  if (mounted) {
+                    setState(() => isLoading = false);
+                  }
+                }
+              },
+              icon: isLoading
+                  ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.arrow_forward_rounded),
+              label: Text(isLoading ? 'Signing in...' : 'Continue'),
+            ),
               SizedBox(height: 10),
 
               ElevatedButton(
                 onPressed: () {
-                  context.push('/overseerHome');
+                  context.push('/otp-login');
                 },
-                child: Text("Overseer Home"),
+                child: Text("Login with OTP"),
               ),
             ],
           ),

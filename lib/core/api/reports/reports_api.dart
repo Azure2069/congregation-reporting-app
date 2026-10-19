@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../network/dio_provider.dart';
 
@@ -59,6 +58,11 @@ class ReportsApi {
     final response = await dio.get('/reports/$userId/reports');
     return response.data;
   }
+
+  Future<dynamic> getMyReports() async {
+    final response = await dio.get('/reports');
+    return response.data;
+  }
 }
 
 final reportsApiProvider = Provider<ReportsApi>((ref) {
@@ -71,4 +75,7 @@ final getGroupReportsProvider = FutureProvider<dynamic>(
 
 final getReportsbyIdProvider = FutureProvider.family<dynamic, int>(
   (ref, userId) => ref.watch(reportsApiProvider).getReportsById(userId),
+);
+final getMyReportsProvider = FutureProvider<dynamic>(
+  (ref) => ref.watch(reportsApiProvider).getMyReports(),
 );

@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 
-import '../api_client.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../features/auth/providers/token_provider.dart';
 

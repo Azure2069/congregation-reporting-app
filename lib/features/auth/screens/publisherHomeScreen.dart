@@ -1,12 +1,14 @@
 import 'package:dio/dio.dart';
 
-import '../../../core/api/api_client.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/utils/date_labels.dart';
 import '../providers/token_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/users/users_api.dart';
+import '../../../core/api/congregation/congregation_api.dart';
+import '../../../core/api/reports/reports_api.dart';
+import '../../reports/widgets/monthly_report_status.dart';
 
 class PublisherHomeScreen extends ConsumerStatefulWidget {
   const PublisherHomeScreen({super.key});
@@ -20,8 +22,17 @@ class _PublisherHomeScreen extends ConsumerState<PublisherHomeScreen> {
   Widget build(BuildContext context) {
     final currentUser = ref.watch(currentUserProvider);
     final reportingMonth = DateLabels.currentReportingMonth();
+    final congregation = ref.watch(getMyCongregationProvider);
+    final reports = ref.watch(getMyReportsProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Congregation Report')),
+      appBar: AppBar(
+        title: congregation.when(
+          loading: () => LinearProgressIndicator(),
+          error: (error, stackTrace) => const Text("Congregation fetch failed"),
+          data: (congregation) =>
+              Text(congregation['name'] ?? "Congregation Report"),
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
         child: Column(
@@ -40,7 +51,8 @@ class _PublisherHomeScreen extends ConsumerState<PublisherHomeScreen> {
                 return const Text('Failed to load your profile.');
               }),
               data: (response) {
-                final user = response.data;
+                final user = response;
+
                 return Text(
                   'Welcome, ${user['name']}!',
                   style: const TextStyle(fontSize: 24),
@@ -77,13 +89,15 @@ class _PublisherHomeScreen extends ConsumerState<PublisherHomeScreen> {
                             color: const Color(0xFFEAF5FB),
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          child: const Text(
-                            'Not submitted',
-                            style: TextStyle(
-                              color: Color(0xFF8A5B12),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                            ),
+                          child: currentUser.when(
+                            loading: () => const CircularProgressIndicator(),
+                            error: (error, stackTrace) =>
+                                const Text("User load fail"),
+                            data: (user) {
+                              return MonthlyReportStatus(
+                                userId: user['id'] as int,
+                              );
+                            },
                           ),
                         ),
                       ],
@@ -189,6 +203,40 @@ class _PublisherHomeScreen extends ConsumerState<PublisherHomeScreen> {
               ),
             ),
             const SizedBox(height: 10),
+            reports.when(
+              loading: () => LinearProgressIndicator(),
+              error: (error, stackTrace) => Text("Reports were not fetched"),
+              data: (reports) {
+                List list3 = [];
+                if (reports.isEmpty) {
+                  return Text("No reports found");
+                }
+                for (int i = 0; i < reports.length && i<3; i++) {
+                  list3.add(reports[i]);
+                }
+                return ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: list3.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    return Card(
+                      borderOnForeground: true,
+                      margin: const EdgeInsets.only(bottom: 12),
+                    child: ListTile(autofocus: true,
+                    title: Text(list3[index]['reporting_month'],),
+                    contentPadding: EdgeInsets.symmetric(
+                horizontal: 18,
+                vertical: 9,),
+                    subtitle: Text("Participated: ${list3[index]['participated']}\nHours: ${list3[index]['hours']??"N/A"}\n"
+                    "Bible Studies: ${list3[index]['bible_studies']}"),
+                    trailing: Text("Status: ${list3[index]['status']}"),
+                    
+                    )
+                    );
+                  },
+                );
+              },
+            ),
             const Text(
               'Your submitted reports will appear here.',
               style: TextStyle(color: Color(0xFF555555)),

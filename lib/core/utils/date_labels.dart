@@ -29,6 +29,7 @@ class DateLabels {
 
   static DateTime currentReportingMonth() {
     final now = DateTime.now();
-    return DateTime(now.year, now.month);
+    final month = now.month - 1;
+    return DateTime(now.year, month);
   }
 }

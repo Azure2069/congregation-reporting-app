@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../providers/report_provider.dart';
-import '../../../models/reports.dart';
 import '../../../core/utils/date_labels.dart';
+import '../../../core/api/reports/reports_api.dart';
 
 class ReportHistoryScreen extends ConsumerWidget {
   // final Report? report;
@@ -25,7 +24,7 @@ class ReportHistoryScreen extends ConsumerWidget {
   ];
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final reports = ref.watch(reportProvider);
+    final reports = ref.watch(getMyReportsProvider);
     return Scaffold(
       appBar: AppBar(
         title: const Text("Report History"),
@@ -54,15 +53,16 @@ class ReportHistoryScreen extends ConsumerWidget {
             style: TextStyle(color: Color(0xFF555555)),
           ),
           const SizedBox(height: 22),
-          if (reports.isEmpty)
-            _buildEmptyState()
-          else
-            ...reports.map(
-              (report) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _buildReportCard(context, report),
-              ),
-            ),
+          reports.when(
+            loading: () => LinearProgressIndicator(),
+            error: (error, stackTrace) => Text("Unable to load reports"),
+            data: (allReports) {
+              if (allReports.isEmpty) {
+                return _buildEmptyState();
+              }
+              return _buildReportsCard(context, allReports);
+            },
+          ),
         ],
       ),
     );
@@ -100,87 +100,111 @@ class ReportHistoryScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildReportCard(BuildContext context, Report report) {
-    final isPublisher = report.publisherType == 'Publisher';
-    final month = DateLabels.monthYear(report.reportingMonth);
-    final status =
-        report.status.name[0].toUpperCase() + report.status.name.substring(1);
+  Widget _buildReportsCard(BuildContext context, List reports) {
+    return Column(
+      children: reports.map((report) {
+        final isPublisher = report['publisher_type'] == 'Publisher';
+        //final month = DateLabels.monthYear(report['reporting_month']);
+        final month = DateLabels.monthYear(
+          DateTime.parse(report['reporting_month']),
+        );
+        final rawStatus = report['status'] as String;
 
-    return Card(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: () => context.push('/report-details', extra: report),
-        child: Padding(
-          padding: const EdgeInsets.all(18),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEAF5FB),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      isPublisher
-                          ? Icons.person_outline
-                          : Icons.workspace_premium_outlined,
-                      color: const Color(0xFF529FCB),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+        final status = rawStatus.isEmpty
+            ? rawStatus
+            : '${rawStatus[0].toUpperCase()}${rawStatus.substring(1)}';
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Card(
+            child: InkWell(
+              borderRadius: BorderRadius.circular(20),
+              onTap: () => context.push('/report-details', extra: report),
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
-                        Text(
-                          month,
-                          style: const TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF222121),
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEAF5FB),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            isPublisher
+                                ? Icons.person_outline
+                                : Icons.workspace_premium_outlined,
+                            color: const Color(0xFF529FCB),
                           ),
                         ),
-                        const SizedBox(height: 3),
-                        Text(
-                          report.publisherType,
-                          style: const TextStyle(color: Color(0xFF555555)),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                month,
+                                style: const TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF222121),
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                report['publisher_type'],
+                                style: const TextStyle(
+                                  color: Color(0xFF555555),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
+                        _statusBadge(status),
                       ],
                     ),
-                  ),
-                  _statusBadge(status),
-                ],
+                    const SizedBox(height: 18),
+                    Wrap(
+                      spacing: 10,
+                      runSpacing: 8,
+                      children: isPublisher
+                          ? [
+                              _metric(
+                                'Participated',
+                                report['participated'] == true ? 'Yes' : 'No',
+                              ),
+                              _metric(
+                                'Bible studies',
+                                '${report['bible_studies'] ?? 0}',
+                              ),
+                            ]
+                          : [
+                              _metric('Hours', '${report['hours'] ?? 0}'),
+                              _metric(
+                                'Bible studies',
+                                '${report['bible_studies'] ?? 0}',
+                              ),
+                            ],
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      'Submitted ${DateLabels.shortDate(DateTime.parse(report['submitted_at']))}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF777777),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 18),
-              Wrap(
-                spacing: 10,
-                runSpacing: 8,
-                children: isPublisher
-                    ? [
-                        _metric(
-                          'Participated',
-                          report.participated == true ? 'Yes' : 'No',
-                        ),
-                        _metric('Bible studies', '${report.bibleStudies ?? 0}'),
-                      ]
-                    : [
-                        _metric('Hours', '${report.hours ?? 0}'),
-                        _metric('Bible studies', '${report.bibleStudies ?? 0}'),
-                      ],
-              ),
-              const SizedBox(height: 14),
-              Text(
-                'Submitted ${DateLabels.shortDate(report.submittedAt)}',
-                style: const TextStyle(fontSize: 12, color: Color(0xFF777777)),
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      }).toList(),
     );
   }
 

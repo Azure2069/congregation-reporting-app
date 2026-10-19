@@ -139,12 +139,12 @@ class _SubmitReportscreen extends ConsumerState<SubmitReportscreen> {
                         }
                         return null;
                       },
-                      onChanged: (String? new_Val) {
+                      onChanged: (String? newVal) {
                         setState(() {
                           _hoursTextController.clear();
                           _bibleStudyTextController.clear();
                           _participated = false;
-                          _publisherType = new_Val;
+                          _publisherType = newVal;
                         });
                       },
                     ),
