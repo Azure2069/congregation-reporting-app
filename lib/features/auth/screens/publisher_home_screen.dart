@@ -20,7 +20,7 @@ class PublisherHomeScreen extends ConsumerStatefulWidget {
 class _PublisherHomeScreen extends ConsumerState<PublisherHomeScreen> {
   @override
   Widget build(BuildContext context) {
-    final currentUser = ref.watch(currentUserProvider);
+    final currentUser = ref.watch(getcurrentUserProvider);
     final reportingMonth = DateLabels.currentReportingMonth();
     final congregation = ref.watch(getMyCongregationProvider);
     final reports = ref.watch(getMyReportsProvider);
@@ -211,7 +211,7 @@ class _PublisherHomeScreen extends ConsumerState<PublisherHomeScreen> {
                 if (reports.isEmpty) {
                   return Text("No reports found");
                 }
-                for (int i = 0; i < reports.length && i<3; i++) {
+                for (int i = 0; i < reports.length && i < 3; i++) {
                   list3.add(reports[i]);
                 }
                 return ListView.builder(
@@ -222,16 +222,19 @@ class _PublisherHomeScreen extends ConsumerState<PublisherHomeScreen> {
                     return Card(
                       borderOnForeground: true,
                       margin: const EdgeInsets.only(bottom: 12),
-                    child: ListTile(autofocus: true,
-                    title: Text(list3[index]['reporting_month'],),
-                    contentPadding: EdgeInsets.symmetric(
-                horizontal: 18,
-                vertical: 9,),
-                    subtitle: Text("Participated: ${list3[index]['participated']}\nHours: ${list3[index]['hours']??"N/A"}\n"
-                    "Bible Studies: ${list3[index]['bible_studies']}"),
-                    trailing: Text("Status: ${list3[index]['status']}"),
-                    
-                    )
+                      child: ListTile(
+                        autofocus: true,
+                        title: Text(list3[index]['reporting_month']),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 9,
+                        ),
+                        subtitle: Text(
+                          "Participated: ${list3[index]['participated']}\nHours: ${list3[index]['hours'] ?? "N/A"}\n"
+                          "Bible Studies: ${list3[index]['bible_studies']}",
+                        ),
+                        trailing: Text("Status: ${list3[index]['status']}"),
+                      ),
                     );
                   },
                 );
@@ -240,6 +243,12 @@ class _PublisherHomeScreen extends ConsumerState<PublisherHomeScreen> {
             const Text(
               'Your submitted reports will appear here.',
               style: TextStyle(color: Color(0xFF555555)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                context.go('/overseerHome');
+              },
+              child: Text("/Elder Home"),
             ),
           ],
         ),

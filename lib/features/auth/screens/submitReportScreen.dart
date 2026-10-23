@@ -2,25 +2,25 @@ import 'package:congregation_reporting/providers/report_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../models/reports.dart';
-import '../../../providers/user_provider.dart';
+import '../../../core/api/users/users_api.dart';
+import '../../../core/api/reports/reports_api.dart';
+import '../../../core/api/service_assignments/service_assignments_api.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/date_labels.dart';
 
 class SubmitReportscreen extends ConsumerStatefulWidget {
-  final Report? updateReport;
-
-  const SubmitReportscreen({super.key, this.updateReport});
+  const SubmitReportscreen({super.key});
 
   @override
   ConsumerState<SubmitReportscreen> createState() => _SubmitReportscreen();
 }
 
 class _SubmitReportscreen extends ConsumerState<SubmitReportscreen> {
-  bool _participated = false;
+  bool? _participated = false;
   late final TextEditingController _bibleStudyTextController;
   late final TextEditingController _hoursTextController;
-  String? _publisherType;
-  DateTime? _reportingMonth;
+  bool isLoading = false;
+
   final _formKey = GlobalKey<FormState>();
 
   static const months = [
@@ -43,14 +43,6 @@ class _SubmitReportscreen extends ConsumerState<SubmitReportscreen> {
     super.initState();
     _bibleStudyTextController = TextEditingController();
     _hoursTextController = TextEditingController();
-    if (widget.updateReport != null) {
-      _publisherType = widget.updateReport!.publisherType;
-      _reportingMonth = widget.updateReport!.reportingMonth;
-      _bibleStudyTextController.text =
-          widget.updateReport?.bibleStudies.toString() ?? '';
-      _hoursTextController.text = widget.updateReport?.hours.toString() ?? '';
-      _participated = widget.updateReport?.participated ?? false;
-    }
   }
 
   @override
@@ -62,17 +54,12 @@ class _SubmitReportscreen extends ConsumerState<SubmitReportscreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.read(userProvider);
-    final reportingMonth =
-        _reportingMonth ?? DateLabels.currentReportingMonth();
+    final userasync = ref.watch(getcurrentUserProvider);
+    final reportingMonth = DateLabels.currentReportingMonth();
+    final _serviceType = [];
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.updateReport != null
-              ? 'Update Monthly Report'
-              : 'Submit Monthly Report',
-        ),
-      ),
+      appBar: AppBar(title: Text('Submit Monthly Report')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
         child: Padding(
@@ -116,7 +103,302 @@ class _SubmitReportscreen extends ConsumerState<SubmitReportscreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    DropdownButtonFormField<String>(
+                    Column(
+                      children: [
+                        userasync.when(
+                          loading: () => const CircularProgressIndicator(),
+                          error: (error, stackTrace) =>
+                              const Text("Unable to load user"),
+                          data: (user) {
+                            final assignmentsAsync = ref.watch(
+                              checkServiceAssignmentProvider((
+                                user['id'],
+                                reportingMonth,
+                              )),
+                            );
+                            return assignmentsAsync.when(
+                              loading: () => CircularProgressIndicator(),
+                              error: (error, stackTrace) =>
+                                  Text("unable to load assignment"),
+                              data: (assignments) {
+                                if (assignments.isEmpty) {
+                                  return const Text(
+                                    "No Assignment Found for this month",
+                                  );
+                                }
+                                for (int i = 0; i < assignments.length; i++) {
+                                  _serviceType.add(
+                                    assignments[i]['service_type'],
+                                  );
+                                }
+
+                                if (_serviceType.contains(
+                                      'auxiliary_pioneer',
+                                    ) ||
+                                    _serviceType.contains("regular_pioneer")) {
+                                  return Column(
+                                    children: [
+                                      const SizedBox(height: 12),
+                                      TextFormField(
+                                        controller: _hoursTextController,
+                                        decoration: InputDecoration(
+                                          labelText: "Enter Number of Hours",
+                                          prefixIcon: Icon(Icons.timer),
+                                        ),
+                                        keyboardType: TextInputType.number,
+                                        validator: (value) {
+                                          if (value == null || value.isEmpty) {
+                                            return "Please Enter Number of Hours";
+                                          }
+                                          final number = int.tryParse(value);
+                                          if (number == null || number < 0) {
+                                            return "Please enter a valid number of Hours";
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                      SizedBox(height: 10),
+                                      TextFormField(
+                                        controller: _bibleStudyTextController,
+                                        decoration: InputDecoration(
+                                          labelText:
+                                              "Enter Number of Bible Studies",
+                                          prefixIcon: Icon(
+                                            Icons.schedule_outlined,
+                                          ),
+                                        ),
+                                        keyboardType: TextInputType.number,
+                                        validator: (value) {
+                                          if (value == null || value.isEmpty) {
+                                            return "Please Enter Number of Bible Studies";
+                                          }
+                                          final number = int.tryParse(value);
+                                          if (number == null || number < 0) {
+                                            return "Please enter a valid number of Bible Studies";
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                    ],
+                                  );
+                                }
+
+                                return Column(
+                                  children: [
+                                    CheckboxListTile(
+                                      title: Text(
+                                        "Participated in the ministry?",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      value: _participated,
+                                      controlAffinity:
+                                          ListTileControlAffinity.leading,
+                                      onChanged: (bool? newVal) {
+                                        setState(() {
+                                          _participated = newVal ?? false;
+                                          if (!_participated!) {
+                                            _bibleStudyTextController.clear();
+                                          }
+                                        });
+                                      },
+                                    ),
+                                    if (_participated!) ...[
+                                      TextFormField(
+                                        controller: _bibleStudyTextController,
+                                        decoration: InputDecoration(
+                                          labelText:
+                                              "Enter Number of Bible Studies",
+                                          prefixIcon: Icon(
+                                            Icons.schedule_outlined,
+                                          ),
+                                        ),
+                                        keyboardType: TextInputType.number,
+                                        validator: (value) {
+                                          if (value == null || value.isEmpty) {
+                                            return "Please Enter Number of Bible Studies";
+                                          }
+                                          final number = int.tryParse(value);
+                                          if (number == null || number < 0) {
+                                            return "Please enter a valid number of Bible Studies";
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                    ],
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 18),
+                        ElevatedButton.icon(
+                          onPressed: isLoading
+                              ? null
+                              : () async {
+                                  if ((!_formKey.currentState!.validate())) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          "Please correct the highlighted fields.",
+                                        ),
+                                      ),
+                                    );
+                                    return;
+                                  }
+                                  setState(() => isLoading = true);
+
+                                  try {
+                                    final int? bibleStudies = int.tryParse(
+                                      _bibleStudyTextController.text,
+                                    );
+                                    final int? hours = int.tryParse(
+                                      _hoursTextController.text,
+                                    );
+                                    final reportSent = await ref
+                                        .read(reportsApiProvider)
+                                        .addReport(
+                                          bibleStudies,
+                                          hours,
+                                          _participated!,
+                                          reportingMonth,
+                                        );
+
+                                    final reportStatus = reportSent['status'];
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Successfully submitted.',
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                    context.go('/home');
+                                  } catch (e) {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Unable to submit Report\n Contact Your Group Overseer.',
+                                          ),
+                                        ),
+                                      );
+
+
+                                      //will be removed soon *************
+                                      context.go('/allMembers');
+                                       //will be removed soon *************just for testing
+                                    }
+                                  } finally {
+                                    if (mounted) {
+                                      setState(() => isLoading = false);
+                                    }
+                                  }
+                                },
+                          icon: isLoading
+                              ? const SizedBox(
+                                  height: 18,
+                                  width: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.arrow_forward_rounded),
+                          label: Text(isLoading ? 'Submitting...' : 'Submit'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+                    
+                    userasync.when(
+                      loading: () => const LinearProgressIndicator(),
+                      error: (error, stackTrace) =>
+                          const Text("unable to load user"),
+                      data: (user) {
+                        final serviceAssignment = ref.read(
+                          getAssignmentsProvider,
+                        );
+                        
+
+                        final service_type = ref.watch(
+                          checkServiceAssignmentProvider(
+                            user['id'],
+                            reportingMonth,
+                          ),
+                        );
+
+                        for(int i=0; i<service_type.length; i++){
+                          if (service_type[i]['service_type']=='auxiliary_pioneer'){
+                            _publisherType=
+                          }
+                        }
+                        return service_type.when(
+                          loading: () => const LinearProgressIndicator(),
+                          error: (error, stackTrace) =>
+                              const Text("unable to load service Type"),
+                          data: (_publisherType) {
+                            
+                          },
+                        );
+                      },
+                    ),
+                    */
+                    
+  
+
+
+/*
+
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+
+DropdownButtonFormField<String>(
                       value: _publisherType,
                       hint: const Text("Select an Option"),
                       items: [
@@ -148,8 +430,11 @@ class _SubmitReportscreen extends ConsumerState<SubmitReportscreen> {
                         });
                       },
                     ),
-                    const SizedBox(height: 16),
-                    if (_publisherType == "Publisher") ...[
+ 
+
+
+
+if (_publisherType == "Publisher") ...[
                       CheckboxListTile(
                         title: Text(
                           "Participated in the ministry?",
@@ -229,111 +514,6 @@ class _SubmitReportscreen extends ConsumerState<SubmitReportscreen> {
                         },
                       ),
                     ],
-
-                    const SizedBox(height: 18),
-                    ElevatedButton(
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          final String publisherType = _publisherType!;
-                          final int? hours = int.tryParse(
-                            _hoursTextController.text,
-                          );
-                          final int? bibleStudies = int.tryParse(
-                            _bibleStudyTextController.text,
-                          );
-                          final bool participated = _participated;
-                          Report? report;
-
-                          if (publisherType == "Publisher" && !participated) {
-                            report = Report(
-                              userId: "user123", // Replace with actual
-                              participated: false,
-                              bibleStudies: null,
-                              hours: null,
-                              publisherType: publisherType,
-                              reportingMonth: reportingMonth,
-                              submittedAt: DateTime.now(),
-                              status: ReportStatus.submitted,
-                              originalSubmissionTime: DateTime.now(),
-                            );
-                          } else if (publisherType == "Publisher" &&
-                              participated) {
-                            report = Report(
-                              userId: user[1].userId,
-                              participated: participated,
-                              publisherType: publisherType,
-                              hours: null,
-                              bibleStudies: bibleStudies,
-                              submittedAt: DateTime.now(),
-                              reportingMonth: reportingMonth,
-                              status: ReportStatus.submitted,
-                              originalSubmissionTime: DateTime.now(),
-                            );
-                          } else if (publisherType == "Regular Pioneer" ||
-                              publisherType == 'Auxiliary Pioneer') {
-                            report = Report(
-                              userId: user[1].userId,
-                              participated: null,
-                              publisherType: publisherType,
-                              hours: hours,
-                              bibleStudies: bibleStudies,
-                              submittedAt: DateTime.now(),
-                              reportingMonth: reportingMonth,
-                              status: ReportStatus.submitted,
-                              originalSubmissionTime: DateTime.now(),
-                            );
-                          }
-                          if (widget.updateReport != null) {
-                            final updateSuccess = ref
-                                .read(reportProvider.notifier)
-                                .updateReport(widget.updateReport!, report!);
-                            if (!updateSuccess) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    "Cannot update report for ${months[report.reportingMonth.month - 1]} ${report.reportingMonth.year}. You can only update within 24 hours of submission.",
-                                  ),
-                                ),
-                              );
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("Report Updated")),
-                              );
-                              context.push('/reportHistory');
-                            }
-                          } else {
-                            final success = ref
-                                .read(reportProvider.notifier)
-                                .addReport(report!);
-
-                            if (!success) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    "Report for ${months[report.reportingMonth.month - 1]} ${report.reportingMonth.year} already submitted",
-                                  ),
-                                ),
-                              );
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("Submitted")),
-                              );
-                              context.push(
-                                '/reportHistory',
-                              ); // Navigate to ReportHistoryScreen
-                            }
-                          }
-                        }
-                      },
-                      child: Text("Submit Report"),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
+ 
+ 
+ */

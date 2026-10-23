@@ -10,10 +10,12 @@ class ServiceAssignmentsApi {
   Future<dynamic> checkServiceAssignment(int userID, DateTime month) async {
     final response = await dio.get(
       "/service_assignment/$userID",
-      queryParameters: {'service_month':
-          '${month.year.toString().padLeft(4, '0')}-'
-          '${month.month.toString().padLeft(2, '0')}-'
-          '${month.day.toString().padLeft(2, '0')}',},
+      queryParameters: {
+        'service_month':
+            '${month.year.toString().padLeft(4, '0')}-'
+            '${month.month.toString().padLeft(2, '0')}-'
+            '${month.day.toString().padLeft(2, '0')}',
+      },
     );
     return response.data;
   }
@@ -52,13 +54,16 @@ final serviceAssignmentsApiProvider = Provider<ServiceAssignmentsApi>(
   (ref) => ServiceAssignmentsApi(ref.watch(dioProvider)),
 );
 
-final checkServiceAssignmentProvider = FutureProvider.family<dynamic, (int, DateTime)>(
-  (ref, parameters) {
-    final userId = parameters.$1;
-    final month = parameters.$2;
+final checkServiceAssignmentProvider =
+    FutureProvider.family<dynamic, (int, DateTime)>((ref, parameters) {
+      final userId = parameters.$1;
+      final month = parameters.$2;
 
-    return ref
-        .watch(serviceAssignmentsApiProvider)
-        .checkServiceAssignment(userId, month);
-  },
+      return ref
+          .watch(serviceAssignmentsApiProvider)
+          .checkServiceAssignment(userId, month);
+    });
+
+final getAssignmentsProvider = FutureProvider<dynamic>(
+  (ref) => ref.watch(serviceAssignmentsApiProvider).getAssignments(),
 );

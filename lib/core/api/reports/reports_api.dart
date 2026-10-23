@@ -28,7 +28,9 @@ class ReportsApi {
   }
 
   Future<dynamic> updateStatus(int id, String status) async {
-    final response = await dio.patch('/reports/$id', data: {'status': status});
+    final response = await dio.patch('/reports/$id', data: {'status': status,
+    'id': id},
+    );
     return response.data;
   }
 
@@ -63,6 +65,19 @@ class ReportsApi {
     final response = await dio.get('/reports');
     return response.data;
   }
+
+  Future<dynamic> getAllReports() async {
+    final response = await dio.get('/reports/all_reports');
+    return response.data;
+  }
+
+  Future<dynamic> getReportsByMonth(DateTime targetMonth) async {
+    final response = await dio.get(
+      "/reports/report_for_month",
+      queryParameters: {'month': targetMonth},
+    );
+    return response.data;
+  }
 }
 
 final reportsApiProvider = Provider<ReportsApi>((ref) {
@@ -78,4 +93,13 @@ final getReportsbyIdProvider = FutureProvider.family<dynamic, int>(
 );
 final getMyReportsProvider = FutureProvider<dynamic>(
   (ref) => ref.watch(reportsApiProvider).getMyReports(),
+);
+
+final getAllReportsProvider = FutureProvider<dynamic>(
+  ((ref) => ref.watch(reportsApiProvider).getAllReports()),
+);
+
+final getReportsByMonth = FutureProvider.family<dynamic, DateTime>(
+  (ref, targetMonth) =>
+      ref.watch(reportsApiProvider).getReportsByMonth(targetMonth),
 );

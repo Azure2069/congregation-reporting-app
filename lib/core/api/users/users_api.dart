@@ -7,13 +7,11 @@ class UsersApi {
   UsersApi(this.dio);
 
   Future<dynamic> login(String username, String password) async {
-    
-      final response = await dio.post(
-        '/users/login',
-        data: {'username': username, 'password': password},
-      );
-      return response.data;
-    
+    final response = await dio.post(
+      '/users/login',
+      data: {'username': username, 'password': password},
+    );
+    return response.data;
   }
 
   Future<dynamic> getCurrentUser() async {
@@ -57,7 +55,7 @@ class UsersApi {
   }
 
   Future<dynamic> deleteById(int id) async {
-    final response = await dio.delete('/users/$id',);
+    final response = await dio.delete('/users/$id');
     return response.data;
   }
 
@@ -86,7 +84,7 @@ class UsersApi {
   }
 
   Future<dynamic> getUserById(int id) async {
-    final response = await dio.get('/users/$id');
+    final response = await dio.get('/users/$id', queryParameters: {'id': id});
     return response.data;
   }
 }
@@ -95,7 +93,7 @@ final usersApiProvider = Provider<UsersApi>(
   (ref) => UsersApi(ref.watch(dioProvider)),
 );
 
-final currentUserProvider = FutureProvider<dynamic>((ref) {
+final getcurrentUserProvider = FutureProvider<dynamic>((ref) {
   final response = ref.read(usersApiProvider).getCurrentUser();
   return response;
 });
@@ -103,3 +101,7 @@ final currentUserProvider = FutureProvider<dynamic>((ref) {
 final viewUsersProvider = FutureProvider<dynamic>((ref) {
   return ref.read(usersApiProvider).viewUsers();
 });
+
+final getUserByIdProvider = FutureProvider.family<dynamic, int>(
+  (ref, id) => ref.watch(usersApiProvider).getUserById(id),
+);

@@ -5,12 +5,12 @@ import 'package:congregation_reporting/features/overseer/screens/group_members_s
 import 'package:congregation_reporting/models/user.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/auth/screens/loginScreen.dart';
-import '../../features/auth/screens/publisherHomeScreen.dart';
+import '../../features/auth/screens/publisher_home_screen.dart';
 import '../../features/auth/screens/submitReportScreen.dart';
 import '../../features/auth/screens/reportHistoryScreen.dart';
 import '../../features/overseer/screens/member_reports_screen.dart';
 import '../../models/reports.dart';
-import '../../features/overseer/screens/home_screen.dart';
+import '../../features/overseer/screens/eldersHomeScreen.dart';
 
 
 final appRouter = GoRouter(
@@ -41,7 +41,7 @@ final appRouter = GoRouter(
     GoRoute(path: '/allMembers', builder: (context, state) => const GroupMembersScreen()
     ),
     GoRoute(path: '/updateReport',
-    builder: (context, state) => SubmitReportscreen(updateReport: state.extra as Report,),
+    builder: (context, state) => SubmitReportscreen(),
     ),
         GoRoute(path: '/memberReport', builder:(context, state)=>MemberReportsScreen(
           member: state.extra as User
@@ -52,7 +52,8 @@ final appRouter = GoRouter(
     GoRoute(path: "/allReports",
     builder: (context, state)=>AllReports()
     
-    )
+    ),
+   
     
 
   ],

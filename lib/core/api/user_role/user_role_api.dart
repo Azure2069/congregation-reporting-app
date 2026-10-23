@@ -19,6 +19,14 @@ class UserRole {
     final response = await dio.get('/user_role');
     return response.data;
   }
+
+  Future<dynamic> getAllUserRoles(int userId) async {
+    final response = await dio.get(
+      '/user_role/all_users_role',
+      queryParameters: {'user_id': userId},
+    );
+    return response.data;
+  }
 }
 
 final userRoleApiProvider = Provider<UserRole>(
@@ -27,4 +35,8 @@ final userRoleApiProvider = Provider<UserRole>(
 
 final getUserRolesProvider = FutureProvider<dynamic>(
   (ref) => ref.watch(userRoleApiProvider).getUserRoles(),
+);
+
+final getAllUserRolesProvider = FutureProvider.family<dynamic, int>(
+  (ref, userId)=>ref.watch(userRoleApiProvider).getAllUserRoles(userId)
 );
