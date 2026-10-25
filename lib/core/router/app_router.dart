@@ -11,11 +11,16 @@ import '../../features/auth/screens/reportHistoryScreen.dart';
 import '../../features/overseer/screens/member_reports_screen.dart';
 import '../../models/reports.dart';
 import '../../features/overseer/screens/eldersHomeScreen.dart';
+import '../../features/auth/screens/auth_screen_check.dart';
 
 
 final appRouter = GoRouter(
-  initialLocation: '/login',
+  initialLocation: '/auth-check',
   routes: [
+    GoRoute(
+  path: '/auth-check',
+  builder: (context, state) => const AuthCheckScreen(),
+),
     GoRoute(
       path: '/home',
       builder: (context, state) => const PublisherHomeScreen(),
@@ -53,6 +58,7 @@ final appRouter = GoRouter(
     builder: (context, state)=>AllReports()
     
     ),
+    
    
     
 

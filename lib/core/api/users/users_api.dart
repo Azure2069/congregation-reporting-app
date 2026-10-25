@@ -10,6 +10,9 @@ class UsersApi {
     final response = await dio.post(
       '/users/login',
       data: {'username': username, 'password': password},
+      options: Options(
+        headers: {'X-Use-Session-Cookie': 'true'}
+      )
     );
     return response.data;
   }

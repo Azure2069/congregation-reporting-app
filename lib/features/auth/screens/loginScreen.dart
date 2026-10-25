@@ -107,6 +107,7 @@ class _LoginScreen extends ConsumerState<LoginScreen> {
                     throw Exception('The server did not return a valid session token.');
                   }
 
+                  await ref.read(tokenStorageProvider).saveToken(token);
                   ref.read(authTokenProvider.notifier).state = token;
 
                   if (mounted) {
