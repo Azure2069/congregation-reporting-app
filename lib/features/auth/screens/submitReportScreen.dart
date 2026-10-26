@@ -1,7 +1,6 @@
-import 'package:congregation_reporting/providers/report_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../models/reports.dart';
+import 'package:dio/dio.dart';
 import '../../../core/api/users/users_api.dart';
 import '../../../core/api/reports/reports_api.dart';
 import '../../../core/api/service_assignments/service_assignments_api.dart';
@@ -9,7 +8,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/date_labels.dart';
 
 class SubmitReportscreen extends ConsumerStatefulWidget {
-  const SubmitReportscreen({super.key});
+  final Map? report;
+  const SubmitReportscreen({super.key, this.report});
 
   @override
   ConsumerState<SubmitReportscreen> createState() => _SubmitReportscreen();
@@ -41,8 +41,14 @@ class _SubmitReportscreen extends ConsumerState<SubmitReportscreen> {
   @override
   void initState() {
     super.initState();
-    _bibleStudyTextController = TextEditingController();
-    _hoursTextController = TextEditingController();
+    final report = widget.report;
+    _bibleStudyTextController = TextEditingController(
+      text: report?['bible_studies']?.toString() ?? '',
+    );
+    _hoursTextController = TextEditingController(
+      text: report?['hours']?.toString() ?? '',
+    );
+    _participated = report == null ? false : report['participated'] as bool?;
   }
 
   @override
@@ -55,11 +61,18 @@ class _SubmitReportscreen extends ConsumerState<SubmitReportscreen> {
   @override
   Widget build(BuildContext context) {
     final userasync = ref.watch(getcurrentUserProvider);
-    final reportingMonth = DateLabels.currentReportingMonth();
-    final _serviceType = [];
+    final isEditing = widget.report != null;
+    final reportingMonth = isEditing
+        ? DateTime.parse(widget.report!['reporting_month'].toString())
+        : DateLabels.currentReportingMonth();
+    final serviceType = widget.report?['publisher_type']?.toString();
 
     return Scaffold(
-      appBar: AppBar(title: Text('Submit Monthly Report')),
+      appBar: AppBar(
+        title: Text(
+          isEditing ? 'Update Monthly Report' : 'Submit Monthly Report',
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
         child: Padding(
@@ -73,7 +86,9 @@ class _SubmitReportscreen extends ConsumerState<SubmitReportscreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Submit monthly report",
+                      isEditing
+                          ? "Update monthly report"
+                          : "Submit monthly report",
                       style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(
                             color: const Color(0xFF222121),
@@ -88,16 +103,21 @@ class _SubmitReportscreen extends ConsumerState<SubmitReportscreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFEAF5FB),
-                        borderRadius: BorderRadius.circular(8),
+                        color: const Color(0xFFEDFCE9),
+                        borderRadius: BorderRadius.circular(14),
                       ),
-                      child: const Row(
+                      child: Row(
                         children: [
-                          Icon(Icons.badge_outlined, color: Color(0xFF529FCB)),
-                          SizedBox(width: 12),
+                          const Icon(
+                            Icons.badge_outlined,
+                            color: Color(0xFF003C33),
+                          ),
+                          const SizedBox(width: 12),
                           Text(
-                            "Baptized Publisher",
-                            style: TextStyle(fontWeight: FontWeight.w700),
+                            isEditing
+                                ? _formatServiceType(serviceType ?? '')
+                                : 'Service assignment for this month',
+                            style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                         ],
                       ),
@@ -105,134 +125,53 @@ class _SubmitReportscreen extends ConsumerState<SubmitReportscreen> {
                     const SizedBox(height: 16),
                     Column(
                       children: [
-                        userasync.when(
-                          loading: () => const CircularProgressIndicator(),
-                          error: (error, stackTrace) =>
-                              const Text("Unable to load user"),
-                          data: (user) {
-                            final assignmentsAsync = ref.watch(
-                              checkServiceAssignmentProvider((
-                                user['id'],
-                                reportingMonth,
-                              )),
-                            );
-                            return assignmentsAsync.when(
-                              loading: () => CircularProgressIndicator(),
-                              error: (error, stackTrace) =>
-                                  Text("unable to load assignment"),
-                              data: (assignments) {
-                                if (assignments.isEmpty) {
-                                  return const Text(
-                                    "No Assignment Found for this month",
+                        if (isEditing)
+                          _buildFieldsForServiceType(serviceType ?? '')
+                        else
+                          userasync.when(
+                            loading: () => const CircularProgressIndicator(),
+                            error: (error, stackTrace) =>
+                                const Text("Unable to load user"),
+                            data: (user) {
+                              final assignmentsAsync = ref.watch(
+                                checkServiceAssignmentProvider((
+                                  user['id'] as int,
+                                  reportingMonth,
+                                )),
+                              );
+                              return assignmentsAsync.when(
+                                loading: () =>
+                                    const CircularProgressIndicator(),
+                                error: (error, stackTrace) =>
+                                    const Text("Unable to load assignment"),
+                                data: (assignments) {
+                                  if (assignments is! List ||
+                                      assignments.isEmpty) {
+                                    return const Text(
+                                      "No assignment found for this month.",
+                                    );
+                                  }
+                                  final serviceTypes = assignments
+                                      .whereType<Map>()
+                                      .map(
+                                        (assignment) =>
+                                            assignment['service_type'],
+                                      )
+                                      .whereType<String>()
+                                      .toList();
+                                  final pioneerType = serviceTypes.firstWhere(
+                                    (type) =>
+                                        type == 'auxiliary_pioneer' ||
+                                        type == 'regular_pioneer',
+                                    orElse: () => 'publisher',
                                   );
-                                }
-                                for (int i = 0; i < assignments.length; i++) {
-                                  _serviceType.add(
-                                    assignments[i]['service_type'],
+                                  return _buildFieldsForServiceType(
+                                    pioneerType,
                                   );
-                                }
-
-                                if (_serviceType.contains(
-                                      'auxiliary_pioneer',
-                                    ) ||
-                                    _serviceType.contains("regular_pioneer")) {
-                                  return Column(
-                                    children: [
-                                      const SizedBox(height: 12),
-                                      TextFormField(
-                                        controller: _hoursTextController,
-                                        decoration: InputDecoration(
-                                          labelText: "Enter Number of Hours",
-                                          prefixIcon: Icon(Icons.timer),
-                                        ),
-                                        keyboardType: TextInputType.number,
-                                        validator: (value) {
-                                          if (value == null || value.isEmpty) {
-                                            return "Please Enter Number of Hours";
-                                          }
-                                          final number = int.tryParse(value);
-                                          if (number == null || number < 0) {
-                                            return "Please enter a valid number of Hours";
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                      SizedBox(height: 10),
-                                      TextFormField(
-                                        controller: _bibleStudyTextController,
-                                        decoration: InputDecoration(
-                                          labelText:
-                                              "Enter Number of Bible Studies",
-                                          prefixIcon: Icon(
-                                            Icons.schedule_outlined,
-                                          ),
-                                        ),
-                                        keyboardType: TextInputType.number,
-                                        validator: (value) {
-                                          if (value == null || value.isEmpty) {
-                                            return "Please Enter Number of Bible Studies";
-                                          }
-                                          final number = int.tryParse(value);
-                                          if (number == null || number < 0) {
-                                            return "Please enter a valid number of Bible Studies";
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                    ],
-                                  );
-                                }
-
-                                return Column(
-                                  children: [
-                                    CheckboxListTile(
-                                      title: Text(
-                                        "Participated in the ministry?",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      value: _participated,
-                                      controlAffinity:
-                                          ListTileControlAffinity.leading,
-                                      onChanged: (bool? newVal) {
-                                        setState(() {
-                                          _participated = newVal ?? false;
-                                          if (!_participated!) {
-                                            _bibleStudyTextController.clear();
-                                          }
-                                        });
-                                      },
-                                    ),
-                                    if (_participated!) ...[
-                                      TextFormField(
-                                        controller: _bibleStudyTextController,
-                                        decoration: InputDecoration(
-                                          labelText:
-                                              "Enter Number of Bible Studies",
-                                          prefixIcon: Icon(
-                                            Icons.schedule_outlined,
-                                          ),
-                                        ),
-                                        keyboardType: TextInputType.number,
-                                        validator: (value) {
-                                          if (value == null || value.isEmpty) {
-                                            return "Please Enter Number of Bible Studies";
-                                          }
-                                          final number = int.tryParse(value);
-                                          if (number == null || number < 0) {
-                                            return "Please enter a valid number of Bible Studies";
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                    ],
-                                  ],
-                                );
-                              },
-                            );
-                          },
-                        ),
+                                },
+                              );
+                            },
+                          ),
                         const SizedBox(height: 18),
                         ElevatedButton.icon(
                           onPressed: isLoading
@@ -251,50 +190,91 @@ class _SubmitReportscreen extends ConsumerState<SubmitReportscreen> {
                                   setState(() => isLoading = true);
 
                                   try {
-                                    final int? bibleStudies = int.tryParse(
+                                    int? bibleStudies = int.tryParse(
                                       _bibleStudyTextController.text,
                                     );
                                     final int? hours = int.tryParse(
                                       _hoursTextController.text,
                                     );
-                                    final reportSent = await ref
-                                        .read(reportsApiProvider)
-                                        .addReport(
-                                          bibleStudies,
-                                          hours,
-                                          _participated!,
-                                          reportingMonth,
+                                    final api = ref.read(reportsApiProvider);
+                                    if (isEditing) {
+                                      final reportId = widget.report!['id'];
+                                      if (reportId is! int) {
+                                        throw StateError(
+                                          'The selected report has no valid ID.',
                                         );
-
-                                    final reportStatus = reportSent['status'];
+                                      }
+                                      final isPublisher =
+                                          serviceType?.toLowerCase() ==
+                                          'publisher';
+                                      if (isPublisher &&
+                                          _participated != true) {
+                                        bibleStudies = null;
+                                      }
+                                      await api.updateReport(
+                                        reportId,
+                                        hours,
+                                        bibleStudies,
+                                        // The backend report model stores
+                                        // participation as a required bool,
+                                        // including for pioneer reports. Keep
+                                        // the existing value when that field
+                                        // is not editable in this form.
+                                        _participated ?? false,
+                                      );
+                                      ref.invalidate(getMyReportsProvider);
+                                      final userId = widget.report!['user_id'];
+                                      if (userId is int) {
+                                        ref.invalidate(
+                                          getReportsbyIdProvider(userId),
+                                        );
+                                      }
+                                    } else {
+                                      await api.addReport(
+                                        hours,
+                                        bibleStudies,
+                                        _participated ?? false,
+                                        reportingMonth,
+                                      );
+                                    }
                                     if (context.mounted) {
                                       ScaffoldMessenger.of(
                                         context,
                                       ).showSnackBar(
-                                        const SnackBar(
+                                        SnackBar(
                                           content: Text(
-                                            'Successfully submitted.',
+                                            isEditing
+                                                ? 'Report updated.'
+                                                : 'Successfully submitted.',
                                           ),
                                         ),
                                       );
                                     }
-                                    context.go('/home');
+                                    context.go(
+                                      isEditing ? '/reportHistory' : '/home',
+                                    );
                                   } catch (e) {
                                     if (context.mounted) {
+                                      final detail = e is DioException
+                                          ? e.response?.data is Map
+                                                ? (e.response!.data
+                                                          as Map)['detail']
+                                                      ?.toString()
+                                                : null
+                                          : null;
                                       ScaffoldMessenger.of(
                                         context,
                                       ).showSnackBar(
-                                        const SnackBar(
+                                        SnackBar(
                                           content: Text(
-                                            'Unable to submit Report\n Contact Your Group Overseer.',
+                                            detail != null && detail.isNotEmpty
+                                                ? detail
+                                                : isEditing
+                                                ? 'Unable to update report. Please try again.'
+                                                : 'Unable to submit report. Contact your group overseer.',
                                           ),
                                         ),
                                       );
-
-
-                                      //will be removed soon *************
-                                      context.go('/allMembers');
-                                       //will be removed soon *************just for testing
                                     }
                                   } finally {
                                     if (mounted) {
@@ -311,7 +291,11 @@ class _SubmitReportscreen extends ConsumerState<SubmitReportscreen> {
                                   ),
                                 )
                               : const Icon(Icons.arrow_forward_rounded),
-                          label: Text(isLoading ? 'Submitting...' : 'Submit'),
+                          label: Text(
+                            isLoading
+                                ? (isEditing ? 'Updating...' : 'Submitting...')
+                                : (isEditing ? 'Update report' : 'Submit'),
+                          ),
                         ),
                       ],
                     ),
@@ -324,25 +308,97 @@ class _SubmitReportscreen extends ConsumerState<SubmitReportscreen> {
       ),
     );
   }
+
+  Widget _buildFieldsForServiceType(String serviceType) {
+    switch (serviceType.toLowerCase()) {
+      case 'auxiliary_pioneer':
+      case 'regular_pioneer':
+        return Column(
+          children: [
+            _buildNumberField(
+              controller: _hoursTextController,
+              label: 'Enter Number of Hours',
+              fieldName: 'Hours',
+              icon: Icons.timer,
+            ),
+            const SizedBox(height: 10),
+            _buildNumberField(
+              controller: _bibleStudyTextController,
+              label: 'Enter Number of Bible Studies',
+              fieldName: 'Bible studies',
+              icon: Icons.schedule_outlined,
+            ),
+          ],
+        );
+      case 'publisher':
+        return Column(
+          children: [
+            CheckboxListTile(
+              title: const Text(
+                'Participated in the ministry?',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              value: _participated ?? false,
+              controlAffinity: ListTileControlAffinity.leading,
+              onChanged: (value) {
+                setState(() {
+                  _participated = value ?? false;
+                  if (_participated != true) {
+                    _bibleStudyTextController.clear();
+                  }
+                });
+              },
+            ),
+            if (_participated == true)
+              _buildNumberField(
+                controller: _bibleStudyTextController,
+                label: 'Enter Number of Bible Studies',
+                fieldName: 'Bible studies',
+                icon: Icons.schedule_outlined,
+              ),
+          ],
+        );
+      default:
+        return const Text('This report has an unsupported publisher type.');
+    }
+  }
+
+  Widget _buildNumberField({
+    required TextEditingController controller,
+    required String label,
+    required String fieldName,
+    required IconData icon,
+  }) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)),
+      keyboardType: TextInputType.number,
+      validator: (value) {
+        if (value == null || value.trim().isEmpty) {
+          return 'Please enter $fieldName.';
+        }
+        final number = int.tryParse(value);
+        if (number == null || number < 0) {
+          return 'Enter a valid non-negative number for $fieldName.';
+        }
+        return null;
+      },
+    );
+  }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+String _formatServiceType(String serviceType) {
+  switch (serviceType.toLowerCase()) {
+    case 'publisher':
+      return 'Publisher';
+    case 'auxiliary_pioneer':
+      return 'Auxiliary Pioneer';
+    case 'regular_pioneer':
+      return 'Regular Pioneer';
+    default:
+      return serviceType;
+  }
+}
 
 /*
                     
@@ -379,9 +435,6 @@ class _SubmitReportscreen extends ConsumerState<SubmitReportscreen> {
                       },
                     ),
                     */
-                    
-  
-
 
 /*
 

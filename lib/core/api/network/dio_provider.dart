@@ -1,24 +1,26 @@
-
 import 'package:dio/dio.dart';
-import 'package:dio/browser.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../features/auth/providers/token_provider.dart';
+import 'dio_web_adapter_stub.dart'
+    if (dart.library.js_interop) 'dio_web_adapter_web.dart'
+    as web_adapter;
 
 final dioProvider = Provider<Dio>((ref) {
+  final baseUrl = kIsWeb || defaultTargetPlatform != TargetPlatform.android
+      ? 'http://127.0.0.1:8000'
+      : 'http://10.0.2.2:8000';
   final dio = Dio(
     BaseOptions(
-      baseUrl: 'http://127.0.0.1:8000',
+      baseUrl: baseUrl,
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
     ),
   );
 
   if (kIsWeb) {
-    dio.httpClientAdapter = BrowserHttpClientAdapter(
-      withCredentials: true,
-    );
+    web_adapter.configureWebAdapter(dio);
   }
 
   dio.interceptors.add(

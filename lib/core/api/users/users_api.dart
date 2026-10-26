@@ -10,9 +10,7 @@ class UsersApi {
     final response = await dio.post(
       '/users/login',
       data: {'username': username, 'password': password},
-      options: Options(
-        headers: {'X-Use-Session-Cookie': 'true'}
-      )
+      options: Options(headers: {'X-Use-Session-Cookie': 'true'}),
     );
     return response.data;
   }
@@ -34,10 +32,7 @@ class UsersApi {
       '/users',
       data: {
         'name': name,
-        'date_of_baptism':
-            '${dateOfBaptism?.year.toString().padLeft(4, '0')}-'
-            '${dateOfBaptism?.month.toString().padLeft(2, '0')}-'
-            '${dateOfBaptism?.day.toString().padLeft(2, '0')}',
+        'date_of_baptism': _dateOnly(dateOfBaptism),
         'group_id': groupId,
         'phone': phone,
         'password': password,
@@ -62,6 +57,11 @@ class UsersApi {
     return response.data;
   }
 
+  Future<dynamic> updatePassword(int id, String password) async {
+    final response = await dio.put('/users/$id', data: {'password': password});
+    return response.data;
+  }
+
   Future<dynamic> updateUser(
     int id,
     String? name,
@@ -74,10 +74,7 @@ class UsersApi {
       '/users/$id',
       data: {
         'name': name,
-        'date_of_baptism':
-            '${dateOfBaptism?.year.toString().padLeft(4, '0')}-'
-            '${dateOfBaptism?.month.toString().padLeft(2, '0')}-'
-            '${dateOfBaptism?.day.toString().padLeft(2, '0')}',
+        'date_of_baptism': _dateOnly(dateOfBaptism),
         'group_id': groupId,
         'phone': phone,
         'username': username,
@@ -90,6 +87,13 @@ class UsersApi {
     final response = await dio.get('/users/$id', queryParameters: {'id': id});
     return response.data;
   }
+}
+
+String? _dateOnly(DateTime? date) {
+  if (date == null) return null;
+  return '${date.year.toString().padLeft(4, '0')}-'
+      '${date.month.toString().padLeft(2, '0')}-'
+      '${date.day.toString().padLeft(2, '0')}';
 }
 
 final usersApiProvider = Provider<UsersApi>(

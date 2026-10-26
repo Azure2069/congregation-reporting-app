@@ -2,53 +2,66 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../providers/token_provider.dart';
 import '../../../core/api/users/users_api.dart';
+import '../providers/token_provider.dart';
 
-class AuthCheckScreen extends ConsumerWidget {
-  const AuthCheckScreen({super.key});
+class AuthCheckScreen extends ConsumerStatefulWidget {
+  const AuthCheckScreen({super.key, this.redirectTo});
+  final String? redirectTo;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return FutureBuilder<void>(
-      future: ref.read(restoreTokenProvider.future),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
+  ConsumerState<AuthCheckScreen> createState() => _AuthCheckScreenState();
+}
 
-        final token = ref.read(authTokenProvider);
+class _AuthCheckScreenState extends ConsumerState<AuthCheckScreen> {
+  bool _started = false;
 
-        WidgetsBinding.instance.addPostFrameCallback((_) async {
-          if (!context.mounted) return;
-
-          if (token == null || token.isEmpty) {
-            context.go('/login');
-            return;
-          }
-
-          try {
-            await ref.read(usersApiProvider).getCurrentUser();
-
-            if (context.mounted) {
-              context.go('/home');
-            }
-          } catch (_) {
-            await ref.read(tokenStorageProvider).deleteToken();
-            ref.read(authTokenProvider.notifier).state = null;
-
-            if (context.mounted) {
-              context.go('/login');
-            }
-          }
-        });
-
-        return const Scaffold(
-          body: Center(child: CircularProgressIndicator()),
-        );
-      },
-    );
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_started) {
+      _started = true;
+      _verifySession();
+    }
   }
+
+  Future<void> _verifySession() async {
+    try {
+      await ref.read(restoreTokenProvider.future);
+      final token = ref.read(authTokenProvider);
+      if (token == null || token.isEmpty) {
+        if (mounted) context.go(_loginLocation());
+        return;
+      }
+      await ref.read(usersApiProvider).getCurrentUser();
+      if (mounted) context.go(_safeDestination(widget.redirectTo));
+    } catch (_) {
+      await ref.read(tokenStorageProvider).deleteToken();
+      ref.read(authTokenProvider.notifier).state = null;
+      if (mounted) context.go(_loginLocation());
+    }
+  }
+
+  String _loginLocation() {
+    final destination = _safeDestination(widget.redirectTo);
+    return Uri(
+      path: '/login',
+      queryParameters: {'redirectTo': destination},
+    ).toString();
+  }
+
+  String _safeDestination(String? destination) {
+    if (destination == null ||
+        !destination.startsWith('/') ||
+        destination.startsWith('//')) {
+      return '/home';
+    }
+    if (destination == '/auth-check' || destination.startsWith('/login'))
+      return '/home';
+    return destination;
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      const Scaffold(body: Center(child: CircularProgressIndicator()));
 }

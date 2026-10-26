@@ -31,14 +31,25 @@ class ServiceAssignmentsApi {
       queryParameters: {'user_id': userId},
       data: {
         'service_type': serviceType,
-        'start_date':
-            '${startDate.year.toString().padLeft(4, '0')}-'
-            '${startDate.month.toString().padLeft(2, '0')}-'
-            '${startDate.day.toString().padLeft(2, '0')}',
-        'end_date':
-            '${endDate?.year.toString().padLeft(4, '0')}-'
-            '${endDate?.month.toString().padLeft(2, '0')}-'
-            '${endDate?.day.toString().padLeft(2, '0')}',
+        'start_date': _dateOnly(startDate),
+        'end_date': endDate == null ? null : _dateOnly(endDate),
+      },
+    );
+    return response.data;
+  }
+
+  Future<dynamic> updateServiceAssignment(
+    int assignmentId,
+    String serviceType,
+    DateTime startDate,
+    DateTime? endDate,
+  ) async {
+    final response = await dio.put(
+      '/service_assignment/$assignmentId',
+      data: {
+        'service_type': serviceType,
+        'start_date': _dateOnly(startDate),
+        'end_date': endDate == null ? null : _dateOnly(endDate),
       },
     );
     return response.data;
@@ -49,6 +60,11 @@ class ServiceAssignmentsApi {
     return response.data;
   }
 }
+
+String _dateOnly(DateTime date) =>
+    '${date.year.toString().padLeft(4, '0')}-'
+    '${date.month.toString().padLeft(2, '0')}-'
+    '${date.day.toString().padLeft(2, '0')}';
 
 final serviceAssignmentsApiProvider = Provider<ServiceAssignmentsApi>(
   (ref) => ServiceAssignmentsApi(ref.watch(dioProvider)),

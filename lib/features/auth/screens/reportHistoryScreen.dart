@@ -58,7 +58,7 @@ class ReportHistoryScreen extends ConsumerWidget {
             error: (error, stackTrace) => Text("Unable to load reports"),
             data: (allReports) {
               if (allReports.isEmpty) {
-                return _buildEmptyState();
+                return _buildEmptyState(context);
               }
               return _buildReportsCard(context, allReports);
             },
@@ -68,7 +68,7 @@ class ReportHistoryScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
@@ -77,7 +77,7 @@ class ReportHistoryScreen extends ConsumerWidget {
             const Icon(
               Icons.auto_stories_outlined,
               size: 42,
-              color: Color(0xFF529FCB),
+              color: Color(0xFF003C33),
             ),
             const SizedBox(height: 16),
             const Text(
@@ -94,6 +94,12 @@ class ReportHistoryScreen extends ConsumerWidget {
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey.shade700, height: 1.5),
             ),
+            const SizedBox(height: 20),
+            FilledButton.icon(
+              onPressed: () => context.push('/submitReport'),
+              icon: const Icon(Icons.add),
+              label: const Text('Submit this month’s report'),
+            ),
           ],
         ),
       ),
@@ -103,7 +109,28 @@ class ReportHistoryScreen extends ConsumerWidget {
   Widget _buildReportsCard(BuildContext context, List reports) {
     return Column(
       children: reports.map((report) {
-        final isPublisher = report['publisher_type'] == 'Publisher';
+        final publisherType = (report['publisher_type'] ?? '').toString();
+        final normalizedPublisherType = publisherType.toLowerCase().replaceAll(
+          ' ',
+          '_',
+        );
+        final isPublisher = normalizedPublisherType == 'publisher';
+        final serviceTypeLabel = switch (normalizedPublisherType) {
+          'publisher' => 'Publisher',
+          'auxiliary_pioneer' => 'Auxiliary Pioneer',
+          'regular_pioneer' => 'Regular Pioneer',
+          _ when normalizedPublisherType.isEmpty => 'Unknown service type',
+          _ =>
+            normalizedPublisherType
+                .replaceAll('_', ' ')
+                .split(' ')
+                .map(
+                  (word) => word.isEmpty
+                      ? word
+                      : '${word[0].toUpperCase()}${word.substring(1)}',
+                )
+                .join(' '),
+        };
         //final month = DateLabels.monthYear(report['reporting_month']);
         final month = DateLabels.monthYear(
           DateTime.parse(report['reporting_month']),
@@ -131,14 +158,14 @@ class ReportHistoryScreen extends ConsumerWidget {
                           width: 44,
                           height: 44,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEAF5FB),
+                            color: const Color(0xFFEDFCE9),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Icon(
                             isPublisher
                                 ? Icons.person_outline
                                 : Icons.workspace_premium_outlined,
-                            color: const Color(0xFF529FCB),
+                            color: const Color(0xFF003C33),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -156,7 +183,7 @@ class ReportHistoryScreen extends ConsumerWidget {
                               ),
                               const SizedBox(height: 3),
                               Text(
-                                report['publisher_type'],
+                                serviceTypeLabel,
                                 style: const TextStyle(
                                   color: Color(0xFF555555),
                                 ),
@@ -209,18 +236,33 @@ class ReportHistoryScreen extends ConsumerWidget {
   }
 
   Widget _statusBadge(String status) {
+    final normalized = status.toLowerCase();
+    final background = normalized == 'approved'
+        ? const Color(0xFFEDFCE9)
+        : normalized == 'returned'
+        ? const Color(0xFFFFF0ED)
+        : normalized == 'submitted'
+        ? const Color(0xFFF1F5FF)
+        : const Color(0xFFEEECE7);
+    final foreground = normalized == 'approved'
+        ? const Color(0xFF003C33)
+        : normalized == 'returned'
+        ? const Color(0xFFB04431)
+        : normalized == 'submitted'
+        ? const Color(0xFF1863DC)
+        : const Color(0xFF616161);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: const Color(0xFFEAF5FB),
-        borderRadius: BorderRadius.circular(20),
+        color: background,
+        borderRadius: BorderRadius.circular(32),
       ),
       child: Text(
         status,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w700,
-          color: Color(0xFF211F54),
+          color: foreground,
         ),
       ),
     );
@@ -230,8 +272,8 @@ class ReportHistoryScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
       decoration: BoxDecoration(
-        color: const Color(0xFFF7F9FA),
-        borderRadius: BorderRadius.circular(8),
+        color: const Color(0xFFF8F7F4),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: RichText(
         text: TextSpan(

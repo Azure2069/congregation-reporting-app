@@ -15,6 +15,16 @@ class UserRole {
     return response.data;
   }
 
+  Future<dynamic> updateRole(int roleId, String role) async {
+    final response = await dio.put('/user_role/$roleId', data: {'role': role});
+    return response.data;
+  }
+
+  Future<dynamic> deleteRole(int roleId) async {
+    final response = await dio.delete('/user_role/$roleId');
+    return response.data;
+  }
+
   Future<dynamic> getUserRoles() async {
     final response = await dio.get('/user_role');
     return response.data;
@@ -38,5 +48,5 @@ final getUserRolesProvider = FutureProvider<dynamic>(
 );
 
 final getAllUserRolesProvider = FutureProvider.family<dynamic, int>(
-  (ref, userId)=>ref.watch(userRoleApiProvider).getAllUserRoles(userId)
+  (ref, userId) => ref.watch(userRoleApiProvider).getAllUserRoles(userId),
 );

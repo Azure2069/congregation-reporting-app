@@ -1,13 +1,10 @@
-import 'package:congregation_reporting/models/reports.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../providers/report_provider.dart';
 import '../../../core/utils/date_labels.dart';
 
-class ReportDetailScreen extends ConsumerWidget {
-  final Report report;
+class ReportDetailScreen extends StatelessWidget {
+  final Map report;
   const ReportDetailScreen({super.key, required this.report});
 
   static const months = [
@@ -26,18 +23,33 @@ class ReportDetailScreen extends ConsumerWidget {
   ];
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final canUpdate = ref.read(reportProvider.notifier).canResubmit(report);
-    String statusText(ReportStatus status) {
-      switch (status) {
-        case ReportStatus.submitted:
-          return "Submitted";
-        case ReportStatus.approved:
-          return "Approved";
-        case ReportStatus.returned:
-          return "Returned";
-      }
-    }
+  Widget build(BuildContext context) {
+    final publisherType = (report['publisher_type'] ?? '').toString();
+    final normalizedPublisherType = publisherType.toLowerCase();
+    final status = (report['status'] ?? 'unknown').toString();
+    final reportingMonth = DateTime.parse(report['reporting_month'].toString());
+    final submittedAt = DateTime.parse(report['submitted_at'].toString());
+    final originalSubmissionValue = report['original_submission_time'];
+    final originalSubmissionTime = originalSubmissionValue == null
+        ? null
+        : DateTime.tryParse(originalSubmissionValue.toString());
+    final normalizedStatus = status.toLowerCase();
+    final elapsedSinceOriginal = originalSubmissionTime == null
+        ? null
+        : DateTime.now().difference(originalSubmissionTime);
+    final canUpdate =
+        normalizedStatus == 'returned' ||
+        (normalizedStatus == 'submitted' &&
+            elapsedSinceOriginal != null &&
+            elapsedSinceOriginal >= Duration.zero &&
+            elapsedSinceOriginal <= const Duration(hours: 24));
+
+    final displayPublisherType = publisherType
+        .replaceAll('_', ' ')
+        .split(' ')
+        .where((word) => word.isNotEmpty)
+        .map((word) => '${word[0].toUpperCase()}${word.substring(1)}')
+        .join(' ');
 
     return Scaffold(
       appBar: AppBar(title: const Text('Report detail')),
@@ -53,7 +65,7 @@ class ReportDetailScreen extends ConsumerWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(24),
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF529FCB), Color(0xFF211F54)],
+                  colors: [Color(0xFF003C33), Color(0xFF071829)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -64,7 +76,7 @@ class ReportDetailScreen extends ConsumerWidget {
                     width: 52,
                     height: 52,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.18),
+                      color: const Color(0x1FFFFFFF),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: const Icon(
@@ -87,7 +99,7 @@ class ReportDetailScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          DateLabels.monthYear(report.reportingMonth),
+                          DateLabels.monthYear(reportingMonth),
                           style: Theme.of(context).textTheme.titleLarge
                               ?.copyWith(
                                 color: Colors.white,
@@ -106,8 +118,10 @@ class ReportDetailScreen extends ConsumerWidget {
                       color: Colors.white.withOpacity(0.16),
                       borderRadius: BorderRadius.circular(30),
                     ),
-                    child: const Text(
-                      'Submitted',
+                    child: Text(
+                      status.isEmpty
+                          ? 'Unknown'
+                          : '${status[0].toUpperCase()}${status.substring(1)}',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 12,
@@ -129,7 +143,7 @@ class ReportDetailScreen extends ConsumerWidget {
             const SizedBox(height: 6),
             const Text(
               'Details of your monthly submission.',
-              style: TextStyle(color: Color(0xFF555555)),
+              style: TextStyle(color: Color(0xFF616161)),
             ),
             const SizedBox(height: 22),
             Card(
@@ -148,47 +162,56 @@ class ReportDetailScreen extends ConsumerWidget {
                     ),
 
                     const SizedBox(height: 18),
-                    if (report.publisherType == 'Publisher') ...[
-                      _buildDetailRow(
-                        'Service type',
-                        '${report.publisherType}',
-                      ),
+                    _buildDetailRow('Service type', displayPublisherType),
+                    if (normalizedPublisherType == 'publisher') ...[
                       _buildDetailRow(
                         'Participated',
-                        '${report.participated == true ? 'Yes' : 'No'}',
+                        report['participated'] == null
+                            ? 'N/A'
+                            : report['participated'] == true
+                            ? 'Yes'
+                            : 'No',
                       ),
                       _buildDetailRow(
-                        'Bible study',
-                        '${report.bibleStudies}  study(ies)',
+                        'Bible studies',
+                        '${report['bible_studies'] ?? 0}',
                       ),
-                      _buildDetailRow('Status', '${statusText(report.status)}'),
+                    ] else if (normalizedPublisherType == 'regular_pioneer' ||
+                        normalizedPublisherType == 'auxiliary_pioneer') ...[
                       _buildDetailRow(
-                        'Submission time',
-                        DateLabels.dateTime(report.submittedAt),
+                        'Bible studies',
+                        '${report['bible_studies'] ?? 0}',
                       ),
-                    ] else if (report.publisherType == "Regular Pioneer" ||
-                        report.publisherType == "Auxiliary Pioneer") ...[
-                      _buildDetailRow(
-                        'Service type',
-                        '${report.publisherType}',
-                      ),
-                      _buildDetailRow(
-                        'Bible study',
-                        '${report.bibleStudies}  study(ies)',
-                      ),
-                      _buildDetailRow('Hours', '${report.hours} hour(s)'),
-                      _buildDetailRow('Status', '${statusText(report.status)}'),
-                      _buildDetailRow(
-                        'Submission time',
-                        DateLabels.dateTime(report.submittedAt),
-                      ),
+                      _buildDetailRow('Hours', '${report['hours'] ?? 0}'),
                     ],
+                    _buildDetailRow('Status', status),
+                    _buildDetailRow(
+                      'Submission time',
+                      DateLabels.dateTime(submittedAt),
+                    ),
                     if (canUpdate) ...[
-                      ElevatedButton(
-                        onPressed: () {
-                          context.push("/updateReport", extra: report);
-                        },
-                        child: const Text('Update Report'),
+                      const SizedBox(height: 12),
+                      if (normalizedStatus == 'returned')
+                        const Padding(
+                          padding: EdgeInsets.only(bottom: 8),
+                          child: Text(
+                            'This report was returned. Update it and resubmit for review.',
+                            style: TextStyle(color: Color(0xFFB04431)),
+                          ),
+                        ),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            context.push('/updateReport', extra: report);
+                          },
+                          icon: const Icon(Icons.edit_outlined),
+                          label: Text(
+                            normalizedStatus == 'returned'
+                                ? 'Update and resubmit'
+                                : 'Update report',
+                          ),
+                        ),
                       ),
                     ],
                   ],

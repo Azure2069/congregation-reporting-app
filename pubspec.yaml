@@ -39,6 +39,8 @@ dependencies:
   dio: ^5.11.1
   shared_preferences: ^2.5.6
   flutter_secure_storage: ^11.2.0
+  docs_gee: ^1.5.1
+  file_saver: ^0.4.0
 
 dev_dependencies:
   flutter_test:
